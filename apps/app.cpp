@@ -9,5 +9,8 @@
 int main() {
     printf("Hello world!\n");
 
+    auto vec = as_vec<int, 5>(5);
+    vec_print(vec, "test");
+
     return 0;
 }

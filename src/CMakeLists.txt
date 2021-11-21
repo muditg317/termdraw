@@ -3,7 +3,7 @@
 
 # Optionally glob, but only for CMake 3.12 or later:
 file(GLOB HEADER_LIST CONFIGURE_DEPENDS "${C-Ballz_SOURCE_DIR}/include/linalg/*.hpp")
-
+message(STATUS "${HEADER_LIST}")
 # Make an automatic library - will be static or dynamic based on user setting
 add_library(linalg_library vectors.cpp ${HEADER_LIST})
 
@@ -14,7 +14,7 @@ target_include_directories(linalg_library PUBLIC ../include)
 target_link_libraries(linalg_library PRIVATE Boost::boost)
 
 # All users of this library will need at least C++11
-target_compile_features(linalg_library PUBLIC cxx_std_11)
+# target_compile_features(linalg_library PUBLIC cxx_std_11)
 
 # IDEs should put the headers in a nice place
 source_group(

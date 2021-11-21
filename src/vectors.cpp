@@ -1,12 +1,23 @@
 #include <linalg/vectors.hpp>
 
 #include <vector>
-#include <cstdarg>
+#include <string>
+#include <iostream>
+// #include <cstdarg>
 
-template<typename T, int N>
-std::vector<T> as_vec(T val) {
-  return std::vector<T>(N, val);
-}
+// template<typename T, int N>
+// std::vector<T> as_vec(T val) {
+//   return std::vector<T>(N, val);
+// }
+
+// template<typename T>
+// void vec_print(std::vector<T> to_print, std::string label) {
+//   printf("Vector `%s`:\t<", label.c_str());
+//   for (auto val : to_print) {
+//     std::cout << val << ',';
+//   }
+//   std::cout << ">" << std::endl;
+// }
 
 template<typename T>
 std::vector<T> vec_sum(std::vector<T> to_add...) {
