@@ -9,7 +9,7 @@ void circle(float x, float y, float r) {
 }
 
 void circle(Eigen::Vector2f center, float radius) {
-  std::cout  << "circle at <" << center.x() << ',' << center.y() << "> | r=" << radius << std::endl;
+  // std::cout  << "circle at <" << center.x() << ',' << center.y() << "> | r=" << radius << std::endl;
   Eigen::Vector2i topLeft = (center - Eigen::Vector2f(radius, radius)).array().floor().cast<int>();
   Eigen::Vector2i bottomRight = (center + Eigen::Vector2f(radius, radius)).array().ceil().cast<int>();
 

@@ -62,7 +62,7 @@ void update(void);
 
 void draw(void);
 
-// void clean(void);
+void clean(void);
 
 int graphics_main(void);
 

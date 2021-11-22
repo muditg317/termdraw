@@ -108,11 +108,11 @@ void draw(void) {
   }
 }
 
-// void clean(void) {
-//   for (int x = 0; x < WIDTH; x++) {
-//     memset(pixelBuffer[x], 0, sizeof(*pixelBuffer[x]));
-//   }
-// }
+void clean(void) {
+  for (int x = 0; x < WIDTH; x++) {
+    memset(pixelBuffer[x], 0, sizeof(TermPix) * HEIGHT);
+  }
+}
 
 void resetCursor(void) {
   printf("\x1b[%dD", CONSOLE_WIDTH);
@@ -123,7 +123,7 @@ int graphics_main(void) {
   setup();
   assert(dims_set && "Must set dimensions for terminal drawing session! Call `display_size(width,height)`");
   
-  printf("Finished termdraw setup!\n\tScreen: %dx%d\n\tConsole: %dx%d\n\tFrame Rate:%.2f\n", WIDTH, HEIGHT, CONSOLE_WIDTH, CONSOLE_HEIGHT, FRAME_RATE);
+  printf("Finished termdraw setup!\n\tScreen:\t%3dx%3d\n\tConsole:\t%3dx%3d\n\tFrame Rate:\t%.2f\n", WIDTH, HEIGHT, CONSOLE_WIDTH, CONSOLE_HEIGHT, FRAME_RATE);
 
   int64_t microsDelay = std::floor(1000000.0/FRAME_RATE);
 
