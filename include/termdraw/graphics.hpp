@@ -62,7 +62,7 @@ void frameRate(double);
  */
 void update(void);
 
-void draw(void);
+// void draw(void);
 
 void clean(void);
 

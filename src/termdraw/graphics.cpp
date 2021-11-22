@@ -63,21 +63,21 @@ void frameRate(double fr) {
   }
 }
 
-char pixelsToBraille_offset1(TermPix r0c0, TermPix r0c1,
+inline char pixelsToBraille_offset1(TermPix r0c0, TermPix r0c1,
                              TermPix r1c0, TermPix r1c1,
                              TermPix r2c0, TermPix r2c1,
                              TermPix r3c0, TermPix r3c1) {
   return r3c0 + (r3c1 << 1);
 }
 
-char pixelsToBraille_offset2(TermPix r0c0, TermPix r0c1,
+inline char pixelsToBraille_offset2(TermPix r0c0, TermPix r0c1,
                              TermPix r1c0, TermPix r1c1,
                              TermPix r2c0, TermPix r2c1,
                              TermPix r3c0, TermPix r3c1) {
   return r0c0 + (r1c0 << 1) + (r2c0 << 2) + (r0c1 << 3) + (r1c1 << 4) + (r2c1 << 5);
 }
 
-void draw(void) {
+inline void draw(void) {
   // printf("draw\n");
   // char charLine[CONSOLE_HEIGHT * CONSOLE_LINE_SIZE]; // each braille character is 3 bytes
   static char baseBraille[] = "\u2800";
@@ -102,10 +102,7 @@ void draw(void) {
     }
     consoleBuffer[CONSOLE_LINE_SIZE*(y+1) - 1] = '\n';
   }
-  // consoleBuffer[CONSOLE_LINE_SIZE*CONSOLE_HEIGHT - 1] = '\0';
   fwrite(consoleBuffer, CONSOLE_LINE_SIZE, CONSOLE_HEIGHT, stdout);
-  // fputc('\n', stdout);
-  // fputc('\b', stdout);
 }
 
 void clean(void) {
@@ -114,7 +111,7 @@ void clean(void) {
   }
 }
 
-void resetCursor(void) {
+inline void resetCursor(void) {
   printf("\x1b[%dD", CONSOLE_WIDTH);
   printf("\x1b[%dA", CONSOLE_HEIGHT);
 }
