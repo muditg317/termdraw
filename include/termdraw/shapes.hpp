@@ -1,8 +1,7 @@
 #ifndef SHAPES_HPP
 #define SHAPES_HPP
 
-#include <linalg/vectors.hpp>
-
+#include <Eigen/Eigen>
 #include <vector>
 
 /**
@@ -18,7 +17,7 @@ void circle(float,float,float);
  * vector center
  * float radius
  */
-void circle(vecf, float);
+void circle(Eigen::Vector2f, float);
 
 /**
  * @brief draw rect starting at x,y with dims w,l

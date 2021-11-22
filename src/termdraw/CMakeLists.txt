@@ -12,8 +12,9 @@ add_library(termdraw_library ${TERMDRAW_SOURCE_LIST} ${TERMDRAW_HEADER_LIST})
 # We need this directory, and users of our library will need it too
 target_include_directories(termdraw_library PUBLIC ${C-Ballz_INCLUDE_DIR})
 
-# This depends on (header only) linalg
-target_link_libraries(termdraw_library PRIVATE linalg_library)
+# This depends on (header only) Eigen3 library
+find_package(Eigen3 CONFIG REQUIRED)
+target_link_libraries(termdraw_library PRIVATE Eigen3::Eigen)
 
 # All users of this library will need at least C++11
 # target_compile_features(termdraw_library PUBLIC cxx_std_11)

@@ -60,7 +60,7 @@ void frameRate(double fr) {
 void draw(void) {
   printf("draw\n");
   char charLine[WIDTH];
-  static char pixelToCharMap[] = {' ','_','^','C'};
+  static char pixelToCharMap[] = {' ','^','_','C'};
   for (int y = 0; y < HEIGHT/2; ++y) {
     for (int x = 0; x < WIDTH; ++x) {
       TermPix b = pixelBuffer[x][2*y];

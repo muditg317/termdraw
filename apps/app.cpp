@@ -1,6 +1,5 @@
-#include <linalg/vectors.hpp>
-// #define GRAPHICS_IMPL_ONLY
 #include <termdraw/graphics.hpp>
+#include <termdraw/shapes.hpp>
 
 #include <fmt/format.h>
 #include <iostream>
@@ -10,10 +9,7 @@
 void setup() {
   display_size(32,32);
   frameRate(0.2);
-  BUFFER[WIDTH/2][HEIGHT/2] = ON;
-  BUFFER[WIDTH/2+1][HEIGHT/2] = ON;
-  BUFFER[WIDTH/2][HEIGHT/2+1] = ON;
-  BUFFER[WIDTH/2+1][HEIGHT/2+1] = ON;
+  circle(WIDTH/2, HEIGHT/2, HEIGHT/4);
 }
 
 void update() {
