@@ -12,7 +12,7 @@
 
 Eigen::Vector2f circlePos;
 Eigen::Vector2f circleVel;
-const Eigen::Vector2f gravity(0,0.00015);
+const Eigen::Vector2f gravity(0,0.000141);
 float r = 10;
 
 void reset() {
@@ -22,7 +22,7 @@ void reset() {
 
 void setup() {
   display_size(256,128);
-  frameRate(100);
+  frameRate(60);
   reset();
 }
 #define restitution 1.0
