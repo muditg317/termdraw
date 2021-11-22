@@ -23,7 +23,9 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   # Note this needs to be done in the main CMakeLists
   # since it calls enable_testing, which must be in the
   # main CMakeLists.
+  set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1)
   include(CTest)
+  enable_testing()
 endif()
 
 # Accumulator library
