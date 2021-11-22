@@ -12,7 +12,7 @@
 
 Eigen::Vector2f circlePos;
 Eigen::Vector2f circleVel;
-const Eigen::Vector2f gravity(0,1);
+const Eigen::Vector2f gravity(0,0.0001);
 float r = 30;
 
 void reset() {
@@ -25,16 +25,17 @@ void setup() {
   frameRate(60);
   reset();
 }
-
+#define restitution 1.0
+#define bounceDamp 1.0
 void update() {
   clean();
 
-  circleVel += gravity;
-  circlePos += circleVel;
+  circleVel += gravity * DELTA_T;
+  circlePos += circleVel * DELTA_T;
   if (circlePos.y() >= HEIGHT - r) {
-    circleVel.y() *= -0.9;
-    circlePos.y() -= 2*(HEIGHT - r);
-    circlePos.y() *= -1;
+    circleVel.y() *= -restitution;
+    circlePos.y() *= bounceDamp-1;
+    circlePos.y() += (2-bounceDamp)*(HEIGHT - r);
   }
   circle(circlePos,r);
   // printf("Buffer: %d\n", BUFFER[WIDTH/2][HEIGHT/2]);

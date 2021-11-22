@@ -106,6 +106,7 @@ void draw(void) {
     fwrite(charLine, CONSOLE_WIDTH, BYTES_PER_CONSOLE_CHAR, stdout);
     fputc('\n', stdout);
   }
+  fputc('\b', stdout);
 }
 
 void clean(void) {
