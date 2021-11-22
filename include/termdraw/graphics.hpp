@@ -1,6 +1,8 @@
 #ifndef GRAPHICS_HPP
 #define GRAPHICS_HPP
 
+#include <cassert>
+
 enum TermPix {
   OFF = 0,
   ON = 1,
@@ -17,9 +19,15 @@ double getFrameRate();
 
 int getWidth();
 #define WIDTH (getWidth())
+#define WIDTH_SCALE (1)
+#define CONSOLE_WIDTH (WIDTH/WIDTH_SCALE)
 
 int getHeight();
 #define HEIGHT (getHeight())
+#define HEIGHT_SCALE (2)
+#define CONSOLE_HEIGHT (HEIGHT/HEIGHT_SCALE)
+
+static_assert(HEIGHT_SCALE == WIDTH_SCALE * 2, "Height must be scaled exactly twice as much as width!!");
 
 TermPix **const getPixelBuffer();
 #define BUFFER (getPixelBuffer())

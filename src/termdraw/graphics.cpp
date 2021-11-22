@@ -58,11 +58,11 @@ void frameRate(double fr) {
 }
 
 void draw(void) {
-  printf("draw\n");
-  char charLine[WIDTH];
+  // printf("draw\n");
+  char charLine[CONSOLE_WIDTH];
   static char pixelToCharMap[] = {' ','^','_','C'};
-  for (int y = 0; y < HEIGHT/2; ++y) {
-    for (int x = 0; x < WIDTH; ++x) {
+  for (int y = 0; y < CONSOLE_HEIGHT; ++y) {
+    for (int x = 0; x < CONSOLE_WIDTH; ++x) {
       TermPix b = pixelBuffer[x][2*y];
       TermPix t = pixelBuffer[x][2*y + 1];
       assert(0 <= t);
@@ -71,21 +71,21 @@ void draw(void) {
       assert(b < TERM_PIX_N);
       charLine[x] = pixelToCharMap[(t<<1)|b];
     }
-    fwrite(charLine, WIDTH, 1, stdout);
+    fwrite(charLine, CONSOLE_WIDTH, 1, stdout);
     fputc('\n', stdout);
   }
 }
 
 void resetCursor(void) {
-  printf("\x1b[%dD", WIDTH);
-  printf("\x1b[%dA", HEIGHT/2);
+  printf("\x1b[%dD", CONSOLE_WIDTH);
+  printf("\x1b[%dA", CONSOLE_HEIGHT);
 }
 
 int graphics_main(void) {
   setup();
   assert(dims_set && "Must set dimensions for terminal drawing session! Call `display_size(width,height)`");
   
-  printf("Finished termdraw setup!\n\tScreen: %dx%d\n\tFrame Rate:%.2f\n", WIDTH, HEIGHT, FRAME_RATE);
+  printf("Finished termdraw setup!\n\tScreen: %dx%d\n\tConsole: %dx%d\n\tFrame Rate:%.2f\n", WIDTH, HEIGHT, CONSOLE_WIDTH, CONSOLE_HEIGHT, FRAME_RATE);
 
   int64_t microsDelay = std::floor(1000000.0/FRAME_RATE);
 
