@@ -19,18 +19,21 @@ double getFrameRate();
 
 int getWidth();
 #define WIDTH (getWidth())
-#define WIDTH_SCALE (1)
-#define CONSOLE_WIDTH (WIDTH/WIDTH_SCALE)
 
 int getHeight();
 #define HEIGHT (getHeight())
-#define HEIGHT_SCALE (2)
-#define CONSOLE_HEIGHT (HEIGHT/HEIGHT_SCALE)
-
-static_assert(HEIGHT_SCALE == WIDTH_SCALE * 2, "Height must be scaled exactly twice as much as width!!");
 
 TermPix **const getPixelBuffer();
 #define BUFFER (getPixelBuffer())
+
+#define WIDTH_SCALE 2
+#define CONSOLE_WIDTH (WIDTH/WIDTH_SCALE)
+#define HEIGHT_SCALE 4
+#define CONSOLE_HEIGHT (HEIGHT/HEIGHT_SCALE)
+#define BYTES_PER_CONSOLE_CHAR 3
+
+static_assert(HEIGHT_SCALE == WIDTH_SCALE * 2, "Height must be scaled exactly twice as much as width!!");
+
 
 /**
  * @brief setup for 
@@ -59,12 +62,16 @@ void update(void);
 
 void draw(void);
 
+// void clean(void);
+
 int graphics_main(void);
 
-#ifndef GRAPHICS_IMPL_ONLY
+#ifdef GRAPHICS_MAIN
 // # ifndef GRAPHICS_HPP_MAIN
 // # define GRAPHICS_HPP_MAIN
-int main(void);
+int main(void) {
+  graphics_main();
+}
 // # endif
 #endif
 

@@ -2,14 +2,16 @@
 #include <termdraw/shapes.hpp>
 
 #include <Eigen/Eigen>
+#include <iostream>
 
 void circle(float x, float y, float r) {
   return circle(Eigen::Vector2f(x,y), r);
 }
 
 void circle(Eigen::Vector2f center, float radius) {
+  std::cout  << "circle at <" << center.x() << ',' << center.y() << "> | r=" << radius << std::endl;
   Eigen::Vector2i topLeft = (center - Eigen::Vector2f(radius, radius)).array().floor().cast<int>();
-  Eigen::Vector2i bottomRight = (center + Eigen::Vector2f(radius, radius)).array().floor().cast<int>();
+  Eigen::Vector2i bottomRight = (center + Eigen::Vector2f(radius, radius)).array().ceil().cast<int>();
 
   for (int y = topLeft.y(); y <= bottomRight.y(); ++y) {
       for (int x = topLeft.x(); x <= bottomRight.x(); ++x) {

@@ -1,7 +1,8 @@
 #include <termdraw/graphics.hpp>
 
-#include <assert.h>
+#include <cassert>
 #include <iostream>
+#include <cstring>
 #include <chrono>
 #include <thread>
 #include <cmath>
@@ -57,24 +58,61 @@ void frameRate(double fr) {
   }
 }
 
+char pixelsToBraille_offset1(TermPix r0c0,
+                            TermPix r0c1,
+                            TermPix r1c0,
+                            TermPix r1c1,
+                            TermPix r2c0,
+                            TermPix r2c1,
+                            TermPix r3c0,
+                            TermPix r3c1) {
+  return r3c0 + (r3c1 << 1);
+}
+
+char pixelsToBraille_offset2(TermPix r0c0,
+                            TermPix r0c1,
+                            TermPix r1c0,
+                            TermPix r1c1,
+                            TermPix r2c0,
+                            TermPix r2c1,
+                            TermPix r3c0,
+                            TermPix r3c1) {
+  return r0c0 + (r1c0 << 1) + (r2c0 << 2) + (r0c1 << 3) + (r1c1 << 4) + (r2c1 << 5);
+}
+
 void draw(void) {
   // printf("draw\n");
-  char charLine[CONSOLE_WIDTH];
-  static char pixelToCharMap[] = {' ','^','_','C'};
+  char charLine[CONSOLE_WIDTH * BYTES_PER_CONSOLE_CHAR]; // each braille character is 3 bytes
+  static char baseBraille[] = "\u2800";
   for (int y = 0; y < CONSOLE_HEIGHT; ++y) {
     for (int x = 0; x < CONSOLE_WIDTH; ++x) {
-      TermPix b = pixelBuffer[x][2*y];
-      TermPix t = pixelBuffer[x][2*y + 1];
-      assert(0 <= t);
-      assert(t < TERM_PIX_N);
-      assert(0 <= b);
-      assert(b < TERM_PIX_N);
-      charLine[x] = pixelToCharMap[(t<<1)|b];
+      TermPix r0c0 = pixelBuffer[WIDTH_SCALE*x][HEIGHT_SCALE*y];
+      TermPix r0c1 = pixelBuffer[WIDTH_SCALE*x+1][HEIGHT_SCALE*y];
+      TermPix r1c0 = pixelBuffer[WIDTH_SCALE*x][HEIGHT_SCALE*y+1];
+      TermPix r1c1 = pixelBuffer[WIDTH_SCALE*x+1][HEIGHT_SCALE*y+1];
+      TermPix r2c0 = pixelBuffer[WIDTH_SCALE*x][HEIGHT_SCALE*y+2];
+      TermPix r2c1 = pixelBuffer[WIDTH_SCALE*x+1][HEIGHT_SCALE*y+2];
+      TermPix r3c0 = pixelBuffer[WIDTH_SCALE*x][HEIGHT_SCALE*y+3];
+      TermPix r3c1 = pixelBuffer[WIDTH_SCALE*x+1][HEIGHT_SCALE*y+3];
+      // TODO: validate pixel values if i want
+
+      char offset1 = pixelsToBraille_offset1(r0c0,r0c1,r1c0,r1c1,r2c0,r2c1,r3c0,r3c1);
+      char offset2 = pixelsToBraille_offset2(r0c0,r0c1,r1c0,r1c1,r2c0,r2c1,r3c0,r3c1);
+
+      charLine[BYTES_PER_CONSOLE_CHAR*x+0] = baseBraille[0];
+      charLine[BYTES_PER_CONSOLE_CHAR*x+1] = baseBraille[1] + offset1;
+      charLine[BYTES_PER_CONSOLE_CHAR*x+2] = baseBraille[2] + offset2;
     }
-    fwrite(charLine, CONSOLE_WIDTH, 1, stdout);
+    fwrite(charLine, CONSOLE_WIDTH, BYTES_PER_CONSOLE_CHAR, stdout);
     fputc('\n', stdout);
   }
 }
+
+// void clean(void) {
+//   for (int x = 0; x < WIDTH; x++) {
+//     memset(pixelBuffer[x], 0, sizeof(*pixelBuffer[x]));
+//   }
+// }
 
 void resetCursor(void) {
   printf("\x1b[%dD", CONSOLE_WIDTH);
@@ -105,8 +143,4 @@ int graphics_main(void) {
 
   free(pixelBuffer);
   return 0;
-}
-
-int main(void) {
-  return graphics_main();
 }
