@@ -30,7 +30,9 @@ TermPix **const getPixelBuffer();
 #define CONSOLE_WIDTH (WIDTH/WIDTH_SCALE)
 #define HEIGHT_SCALE 4
 #define CONSOLE_HEIGHT (HEIGHT/HEIGHT_SCALE)
+
 #define BYTES_PER_CONSOLE_CHAR 3
+#define CONSOLE_LINE_SIZE ((CONSOLE_WIDTH)*(BYTES_PER_CONSOLE_CHAR) + 1) /* +1 added to account for new lines*/
 
 static_assert(HEIGHT_SCALE == WIDTH_SCALE * 2, "Height must be scaled exactly twice as much as width!!");
 

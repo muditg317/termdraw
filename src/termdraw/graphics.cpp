@@ -24,21 +24,26 @@ int getHeight() {
 }
 
 TermPix **pixelBuffer;
-bool bufferAllocated = false;
+char *consoleBuffer;
+
+bool pixelBufferAllocated = false;
 TermPix **const getPixelBuffer() {
-  assert(bufferAllocated && "Must allocate buffer before reading or writing!");
+  assert(pixelBufferAllocated && "Must allocate buffer before reading or writing!");
   // printf("accessed buffer!\n");
   return pixelBuffer;
 }
 
-void allocate_buffer(void) {
+void allocate_buffers(void) {
   pixelBuffer = (TermPix**) calloc(WIDTH, sizeof(TermPix*));
-  assert(pixelBuffer != nullptr && "Failed to allocate buffer for terminal drawing session!");
+  assert(pixelBuffer != nullptr && "Failed to allocate pixel buffer for terminal drawing session!");
   for (int x = 0; x < WIDTH; x++) {
     pixelBuffer[x] = (TermPix*) calloc(HEIGHT, sizeof(TermPix));
-    assert(pixelBuffer[x] != nullptr && "Failed to allocate buffer for terminal drawing session!");
+    assert(pixelBuffer[x] != nullptr && "Failed to allocate pixel buffer for terminal drawing session!");
   }
-  bufferAllocated = true;
+  pixelBufferAllocated = true;
+
+  consoleBuffer = (char *) calloc(CONSOLE_HEIGHT, sizeof(char) * CONSOLE_LINE_SIZE);
+  assert(consoleBuffer != nullptr && "Failed to allocate console buffer for terminal drawing session!");
 }
 
 static bool dims_set = false;
@@ -48,7 +53,7 @@ void display_size(int width, int height) {
   _height = height;
   dims_set = true;
 
-  allocate_buffer();
+  allocate_buffers();
 }
 
 void frameRate(double fr) {
@@ -58,31 +63,23 @@ void frameRate(double fr) {
   }
 }
 
-char pixelsToBraille_offset1(TermPix r0c0,
-                            TermPix r0c1,
-                            TermPix r1c0,
-                            TermPix r1c1,
-                            TermPix r2c0,
-                            TermPix r2c1,
-                            TermPix r3c0,
-                            TermPix r3c1) {
+char pixelsToBraille_offset1(TermPix r0c0, TermPix r0c1,
+                             TermPix r1c0, TermPix r1c1,
+                             TermPix r2c0, TermPix r2c1,
+                             TermPix r3c0, TermPix r3c1) {
   return r3c0 + (r3c1 << 1);
 }
 
-char pixelsToBraille_offset2(TermPix r0c0,
-                            TermPix r0c1,
-                            TermPix r1c0,
-                            TermPix r1c1,
-                            TermPix r2c0,
-                            TermPix r2c1,
-                            TermPix r3c0,
-                            TermPix r3c1) {
+char pixelsToBraille_offset2(TermPix r0c0, TermPix r0c1,
+                             TermPix r1c0, TermPix r1c1,
+                             TermPix r2c0, TermPix r2c1,
+                             TermPix r3c0, TermPix r3c1) {
   return r0c0 + (r1c0 << 1) + (r2c0 << 2) + (r0c1 << 3) + (r1c1 << 4) + (r2c1 << 5);
 }
 
 void draw(void) {
   // printf("draw\n");
-  char charLine[CONSOLE_WIDTH * BYTES_PER_CONSOLE_CHAR]; // each braille character is 3 bytes
+  // char charLine[CONSOLE_HEIGHT * CONSOLE_LINE_SIZE]; // each braille character is 3 bytes
   static char baseBraille[] = "\u2800";
   for (int y = 0; y < CONSOLE_HEIGHT; ++y) {
     for (int x = 0; x < CONSOLE_WIDTH; ++x) {
@@ -99,14 +96,16 @@ void draw(void) {
       char offset1 = pixelsToBraille_offset1(r0c0,r0c1,r1c0,r1c1,r2c0,r2c1,r3c0,r3c1);
       char offset2 = pixelsToBraille_offset2(r0c0,r0c1,r1c0,r1c1,r2c0,r2c1,r3c0,r3c1);
 
-      charLine[BYTES_PER_CONSOLE_CHAR*x+0] = baseBraille[0];
-      charLine[BYTES_PER_CONSOLE_CHAR*x+1] = baseBraille[1] + offset1;
-      charLine[BYTES_PER_CONSOLE_CHAR*x+2] = baseBraille[2] + offset2;
+      consoleBuffer[CONSOLE_LINE_SIZE*y + BYTES_PER_CONSOLE_CHAR*x+0] = baseBraille[0];
+      consoleBuffer[CONSOLE_LINE_SIZE*y + BYTES_PER_CONSOLE_CHAR*x+1] = baseBraille[1] + offset1;
+      consoleBuffer[CONSOLE_LINE_SIZE*y + BYTES_PER_CONSOLE_CHAR*x+2] = baseBraille[2] + offset2;
     }
-    fwrite(charLine, CONSOLE_WIDTH, BYTES_PER_CONSOLE_CHAR, stdout);
-    fputc('\n', stdout);
+    consoleBuffer[CONSOLE_LINE_SIZE*(y+1) - 1] = '\n';
   }
-  fputc('\b', stdout);
+  // consoleBuffer[CONSOLE_LINE_SIZE*CONSOLE_HEIGHT - 1] = '\0';
+  fwrite(consoleBuffer, CONSOLE_LINE_SIZE, CONSOLE_HEIGHT, stdout);
+  // fputc('\n', stdout);
+  // fputc('\b', stdout);
 }
 
 void clean(void) {
