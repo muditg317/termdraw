@@ -8,6 +8,8 @@
 #include <cmath>
 #include <string>
 
+#include <Eigen/Eigen>
+
 static double _frameRate = DEFAULT_FRAME_RATE;
 double getFrameRate() {
   return _frameRate;
@@ -23,23 +25,25 @@ int getHeight() {
   return _height;
 }
 
-TermPix **pixelBuffer;
+// TermPix **pixelBuffer;
+Eigen::MatrixXi pixelBuffer;
 char *consoleBuffer;
 
 bool pixelBufferAllocated = false;
-TermPix **const getPixelBuffer() {
+Eigen::MatrixXi& getPixelBuffer() {
   assert(pixelBufferAllocated && "Must allocate buffer before reading or writing!");
   // printf("accessed buffer!\n");
   return pixelBuffer;
 }
 
 void allocate_buffers(void) {
-  pixelBuffer = (TermPix**) calloc(WIDTH, sizeof(TermPix*));
-  assert(pixelBuffer != nullptr && "Failed to allocate pixel buffer for terminal drawing session!");
-  for (int x = 0; x < WIDTH; x++) {
-    pixelBuffer[x] = (TermPix*) calloc(HEIGHT, sizeof(TermPix));
-    assert(pixelBuffer[x] != nullptr && "Failed to allocate pixel buffer for terminal drawing session!");
-  }
+  // pixelBuffer = (TermPix**) calloc(WIDTH, sizeof(TermPix*));
+  // assert(pixelBuffer != nullptr && "Failed to allocate pixel buffer for terminal drawing session!");
+  // for (int x = 0; x < WIDTH; x++) {
+  //   pixelBuffer[x] = (TermPix*) calloc(HEIGHT, sizeof(TermPix));
+  //   assert(pixelBuffer[x] != nullptr && "Failed to allocate pixel buffer for terminal drawing session!");
+  // }
+  pixelBuffer = Eigen::MatrixXi(WIDTH,HEIGHT);
   pixelBufferAllocated = true;
 
   consoleBuffer = (char *) calloc(CONSOLE_HEIGHT, sizeof(char) * CONSOLE_LINE_SIZE);
@@ -63,18 +67,12 @@ void frameRate(double fr) {
   }
 }
 
-inline char pixelsToBraille_offset1(TermPix r0c0, TermPix r0c1,
-                             TermPix r1c0, TermPix r1c1,
-                             TermPix r2c0, TermPix r2c1,
-                             TermPix r3c0, TermPix r3c1) {
-  return r3c0 + (r3c1 << 1);
+inline char pixelsToBraille_offset1(Eigen::Matrix<int,WIDTH_SCALE,HEIGHT_SCALE> pixelGroup) {
+  return pixelGroup(0,3) + (pixelGroup(1,3) << 1);
 }
 
-inline char pixelsToBraille_offset2(TermPix r0c0, TermPix r0c1,
-                             TermPix r1c0, TermPix r1c1,
-                             TermPix r2c0, TermPix r2c1,
-                             TermPix r3c0, TermPix r3c1) {
-  return r0c0 + (r1c0 << 1) + (r2c0 << 2) + (r0c1 << 3) + (r1c1 << 4) + (r2c1 << 5);
+inline char pixelsToBraille_offset2(Eigen::Matrix<int,WIDTH_SCALE,HEIGHT_SCALE> pixelGroup) {
+  return pixelGroup(0,0) + (pixelGroup(0,1) << 1) + (pixelGroup(0,2) << 2) + (pixelGroup(1,0) << 3) + (pixelGroup(1,1) << 4) + (pixelGroup(1,2) << 5);
 }
 
 inline void draw(void) {
@@ -83,18 +81,12 @@ inline void draw(void) {
   static char baseBraille[] = "\u2800";
   for (int y = 0; y < CONSOLE_HEIGHT; ++y) {
     for (int x = 0; x < CONSOLE_WIDTH; ++x) {
-      TermPix r0c0 = pixelBuffer[WIDTH_SCALE*x][HEIGHT_SCALE*y];
-      TermPix r0c1 = pixelBuffer[WIDTH_SCALE*x+1][HEIGHT_SCALE*y];
-      TermPix r1c0 = pixelBuffer[WIDTH_SCALE*x][HEIGHT_SCALE*y+1];
-      TermPix r1c1 = pixelBuffer[WIDTH_SCALE*x+1][HEIGHT_SCALE*y+1];
-      TermPix r2c0 = pixelBuffer[WIDTH_SCALE*x][HEIGHT_SCALE*y+2];
-      TermPix r2c1 = pixelBuffer[WIDTH_SCALE*x+1][HEIGHT_SCALE*y+2];
-      TermPix r3c0 = pixelBuffer[WIDTH_SCALE*x][HEIGHT_SCALE*y+3];
-      TermPix r3c1 = pixelBuffer[WIDTH_SCALE*x+1][HEIGHT_SCALE*y+3];
-      // TODO: validate pixel values if i want
+      Eigen::Matrix<int,WIDTH_SCALE,HEIGHT_SCALE> pixelGroup = pixelBuffer.block<WIDTH_SCALE,HEIGHT_SCALE>(x*WIDTH_SCALE,y*HEIGHT_SCALE);
+      // TODO: validate pixel values
+      assert(pixelGroup.sum() == pixelGroup.count() && "Matrix must have only 1s and 0s!");
 
-      char offset1 = pixelsToBraille_offset1(r0c0,r0c1,r1c0,r1c1,r2c0,r2c1,r3c0,r3c1);
-      char offset2 = pixelsToBraille_offset2(r0c0,r0c1,r1c0,r1c1,r2c0,r2c1,r3c0,r3c1);
+      char offset1 = pixelsToBraille_offset1(pixelGroup);
+      char offset2 = pixelsToBraille_offset2(pixelGroup);
 
       consoleBuffer[CONSOLE_LINE_SIZE*y + BYTES_PER_CONSOLE_CHAR*x+0] = baseBraille[0];
       consoleBuffer[CONSOLE_LINE_SIZE*y + BYTES_PER_CONSOLE_CHAR*x+1] = baseBraille[1] + offset1;
@@ -106,9 +98,10 @@ inline void draw(void) {
 }
 
 void clean(void) {
-  for (int x = 0; x < WIDTH; x++) {
-    memset(pixelBuffer[x], 0, sizeof(TermPix) * HEIGHT);
-  }
+  // for (int x = 0; x < WIDTH; x++) {
+  //   memset(pixelBuffer[x], 0, sizeof(TermPix) * HEIGHT);
+  // }
+  pixelBuffer.setZero();
 }
 
 inline void resetCursor(void) {
@@ -120,7 +113,7 @@ int graphics_main(void) {
   setup();
   assert(dims_set && "Must set dimensions for terminal drawing session! Call `display_size(width,height)`");
   
-  printf("Finished termdraw setup!\n\tScreen:\t%3dx%3d\n\tConsole:\t%3dx%3d\n\tFrame Rate:\t%.2f\n", WIDTH, HEIGHT, CONSOLE_WIDTH, CONSOLE_HEIGHT, FRAME_RATE);
+  printf("Finished termdraw setup!\n\tScreen:    \t%-3dx%3d\n\tConsole:\t%-3dx%3d\n\tFrame Rate:\t%.2f\n", WIDTH, HEIGHT, CONSOLE_WIDTH, CONSOLE_HEIGHT, FRAME_RATE);
 
   int64_t microsDelay = std::floor(1000000.0/FRAME_RATE);
 
@@ -138,6 +131,7 @@ int graphics_main(void) {
     std::this_thread::sleep_until(t);
   }
 
-  free(pixelBuffer);
+  // free(pixelBuffer);
+  // pixelBuffer.~Matrix();
   return 0;
 }

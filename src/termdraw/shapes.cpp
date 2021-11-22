@@ -19,7 +19,7 @@ void circle(Eigen::Vector2f center, float radius) {
           Eigen::Vector2f delta = center - coordCenter;
           if (delta.squaredNorm() <= radius*radius) {
               if (0 <= x && x < WIDTH && 0 <= y && y < HEIGHT) {
-                  BUFFER[x][y] = ON;
+                  BUFFER(x,y) = ON;
               }
           }
       }

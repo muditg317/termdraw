@@ -2,6 +2,7 @@
 #define GRAPHICS_HPP
 
 #include <cassert>
+#include <Eigen/Eigen>
 
 enum TermPix {
   OFF = 0,
@@ -23,7 +24,7 @@ int getWidth();
 int getHeight();
 #define HEIGHT (getHeight())
 
-TermPix **const getPixelBuffer();
+Eigen::MatrixXi& getPixelBuffer();
 #define BUFFER (getPixelBuffer())
 
 #define WIDTH_SCALE 2

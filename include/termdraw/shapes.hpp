@@ -28,4 +28,11 @@ void circle(Eigen::Vector2f, float);
  */
 void rect(float,float,float,float);
 
+/**
+ * @brief draw rect with top-left corner and specified dims
+ * Eigen::Vector2f corner-topleft
+ * Eigen::Vector2f dims
+ */
+void rect(Eigen::Vector2f,Eigen::Vector2f);
+
 #endif
