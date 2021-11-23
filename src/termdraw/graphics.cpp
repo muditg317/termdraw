@@ -78,6 +78,7 @@ inline char pixelsToBraille_offset2(PixBuf<WIDTH_SCALE,HEIGHT_SCALE> pixelGroup)
 }
 
 inline void render(void) {
+  pixelBuffer(5,5) = 5;
   // printf("render\n");
   // char charLine[CONSOLE_HEIGHT * CONSOLE_LINE_SIZE]; // each braille character is 3 bytes
   static char baseBraille[] = "\u2800";
