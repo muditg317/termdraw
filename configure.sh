@@ -1,6 +1,7 @@
 set -e
 
-# build_type=RelWithDebInfo
+build_type=RelWithDebInfo
+build_type=Debug
 build_type=Release
 
 _cmake=/usr/bin/cmake

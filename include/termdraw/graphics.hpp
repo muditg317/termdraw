@@ -10,6 +10,12 @@ enum TermPix {
   TERM_PIX_N
 };
 
+#define PIX_BUF_MATRIX_T bool
+template<int T1, int T2>
+using PixBuf = Eigen::Matrix<PIX_BUF_MATRIX_T, T1, T2>;
+
+typedef PixBuf<Eigen::Dynamic, Eigen::Dynamic> PixelBuffer;
+
 double getFrameRate();
 #define FRAME_RATE (getFrameRate())
 #define DEFAULT_FRAME_RATE 15.0
@@ -24,7 +30,7 @@ int getWidth();
 int getHeight();
 #define HEIGHT (getHeight())
 
-Eigen::MatrixXi& getPixelBuffer();
+PixelBuffer& getPixelBuffer();
 #define BUFFER (getPixelBuffer())
 
 #define WIDTH_SCALE 2
@@ -42,7 +48,7 @@ static_assert(HEIGHT_SCALE == WIDTH_SCALE * 2, "Height must be scaled exactly tw
  * @brief setup for 
  * 
  */
-void setup(void);
+void setup(int argc, char *argv[]);
 
 /**
  * @brief set the dimensions for the graphics buffer
@@ -58,22 +64,22 @@ void display_size(int, int);
 void frameRate(double);
 
 /**
- * @brief update the pixel buffer however desired before the next draw loop
+ * @brief update the pixel buffer however desired before the next render call
  * 
  */
 void update(void);
 
-// void draw(void);
+// void render(void);
 
 void clean(void);
 
-int graphics_main(void);
+int graphics_main(int argc, char *argv[]);
 
 #ifdef GRAPHICS_MAIN
 // # ifndef GRAPHICS_HPP_MAIN
 // # define GRAPHICS_HPP_MAIN
-int main(void) {
-  graphics_main();
+int main(int argc, char *argv[]) {
+  graphics_main(argc, argv);
 }
 // # endif
 #endif

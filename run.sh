@@ -1,2 +1,2 @@
 
-./build.sh && ./build/apps/app
+./build.sh && ./build/apps/app $@
