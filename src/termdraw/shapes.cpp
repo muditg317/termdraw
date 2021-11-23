@@ -64,21 +64,21 @@ void circle2(Eigen::Vector2f center, float radius) {
   static int i = 0;
   i++;
   int radCeil = (int) std::ceil(radius);
-  int radCeil2 = radCeil * 2;
+  int radCeil2p1 = radCeil * 2+1;
 
 
   bool found = true;
-  decltype(circleDataMap)::iterator circleMapIter(circleDataMap.lower_bound(radCeil2));
-  if (circleMapIter == circleDataMap.end() || radCeil2 < circleMapIter->first) { // not found
+  decltype(circleDataMap)::iterator circleMapIter(circleDataMap.lower_bound(radCeil2p1));
+  if (circleMapIter == circleDataMap.end() || radCeil2p1 < circleMapIter->first) { // not found
   // if (lastRadius != radius) {
     found = false;
-    // std::cout << "calc stuff for " << radCeil2 << "!" << std::endl;
-    Eigen::MatrixXcf templateMat ( radCeil2, radCeil2);
-    // auto tiledVec = (new Eigen::CwiseNullaryOp<Eigen::internal::linspaced_op<float>,Eigen::VectorXf::Base::PlainObject>(Eigen::VectorXf::LinSpaced(radCeil2, -radCeil+0.5, radCeil+0.5))) -> replicate(1, radCeil2);
+    // std::cout << "calc stuff for " << radCeil2p1 << "!" << std::endl;
+    Eigen::MatrixXcf templateMat ( radCeil2p1, radCeil2p1);
+    // auto tiledVec = (new Eigen::CwiseNullaryOp<Eigen::internal::linspaced_op<float>,Eigen::VectorXf::Base::PlainObject>(Eigen::VectorXf::LinSpaced(radCeil2p1, -radCeil+0.5, radCeil+0.5))) -> replicate(1, radCeil2p1);
     // templateMat->real() = *(new decltype(tiledVec)(tiledVec));
     // float minX = std::max(-radCeil, 0)+0.5;
     // float maxX = std::min(radCeil, WIDTH)+0.5;
-    templateMat.real() = Eigen::VectorXf::LinSpaced(radCeil2, -radCeil+0.5, radCeil-0.5).replicate(1, radCeil2);
+    templateMat.real() = Eigen::VectorXf::LinSpaced(radCeil2p1, -radCeil+0.5, radCeil+0.5).replicate(1, radCeil2p1);
     // auto trans = tiledVec.transpose();
     // templateMat->imag() = *(new decltype(trans)(trans));
     templateMat.imag() = templateMat.real().transpose();
@@ -91,40 +91,77 @@ void circle2(Eigen::Vector2f center, float radius) {
     // arrCmp.reshaped()
     // arrCmp = _arrCmp;
     // std::cout << "arrCmp after map insertion: " << &arrCmp.value() << '\n' << arrCmp.value() << std::endl;
-    // std::shared_ptr<MatrixXb> onesPtr(new MatrixXb(Eigen::DenseBase<PixelBuffer>::Ones(radCeil2,radCeil2)));
-    auto _ones = Eigen::DenseBase<PixelBuffer>::Ones(radCeil2,radCeil2).eval();
+    // std::shared_ptr<MatrixXb> onesPtr(new MatrixXb(Eigen::DenseBase<PixelBuffer>::Ones(radCeil2p1,radCeil2p1)));
+    auto _ones = Eigen::DenseBase<PixelBuffer>::Ones(radCeil2p1,radCeil2p1).eval();
     // ones.emplace(_ones);
     // ones = _ones;
-    circleMapIter = circleDataMap.insert(circleMapIter, std::make_pair(radCeil2, circleData(_arrCmp,_ones)));     // hinted insertion
+    circleMapIter = circleDataMap.insert(circleMapIter, std::make_pair(radCeil2p1, circleData(_arrCmp,_ones)));     // hinted insertion
     // std::cout << "right after map insertion: " << &(circleMapIter->second.first) << '\n' << (circleMapIter->second.first) << std::endl;
     // lastRadius = radius;
   } else {
       // ... use circleMapIter->second here
-    // if (i%1==0) std::cout << "pre calculated stuff for " << radCeil2 << "!" << std::endl;
+    // if (i%1==0) std::cout << "pre calculated stuff for " << radCeil2p1 << "!" << std::endl;
   }
   // std::cout << "first:\n" << circleMapIter->second.first << "\n";
   // if (!found) {
     // std::cout << "second:\n" << circleMapIter->second.second << "ones\n";
   // }
 
-  // if (!circleDataMap.count(radCeil2)) {
+  // if (!circleDataMap.count(radCeil2p1)) {
   //   std::cout << "circle map still doesn't contains the thing..." << std::endl;
   // } else {
 
   // }
 
-  auto bufferChunk = BUFFER.block(center.x()-radius,center.y()-radius,radCeil2,radCeil2);
+  int minX = int(center.x())-radius;
+  int minY = int(center.y())-radius;
+  int dataMinX = 0;
+  if (minX < 0) {
+    dataMinX -= minX;
+    minX = 0;
+  }
+  int dataMinY = 0;
+  if (minY < 0) {
+    dataMinY -= minY;
+    minY = 0;
+  }
+
+  int maxX = int(center.x())+radius;
+  int maxY = int(center.y())+radius;
+  int dataMaxX = radCeil2p1-1;
+  if (maxX >= WIDTH) {
+    dataMaxX -= (maxX-WIDTH+1);
+    maxX = WIDTH-1;
+  }
+  int dataMaxY = radCeil2p1-1;
+  if (maxY >= HEIGHT) {
+    dataMaxY -= (maxY-HEIGHT+1);
+    maxY = HEIGHT-1;
+  }
+
+
+  // auto bufferChunk = BUFFER.block(center.x()-radius,center.y()-radius,radCeil2p1,radCeil2p1);
+  auto bufferChunk = BUFFER(Eigen::seq(minX,maxX),Eigen::seq(minY,maxY));//.block(minX,minY,maxX-minX+1,maxY-minY+1);
   // std::cout << templateMat << "\n==" << templateMat.cwiseAbs2() << "\ngay" << radius*radius << std::endl;
 
   circleData pair = circleMapIter->second;
 
-  auto arrCmp = pair.first;
+  auto arrCmp = pair.first(Eigen::seq(dataMinX,dataMaxX),Eigen::seq(dataMinY,dataMaxY));
   // if (i%1==0) std::cout << "on access arrCmpFromMap: " << &arrCmp.value() << '\n';
   // if (i%1==0) std::cout << arrCmp.value() << std::endl;
-  auto ones = pair.second;
+  auto ones = pair.second(Eigen::seq(dataMinX,dataMaxX),Eigen::seq(dataMinY,dataMaxY));
   // std::cout << "on access onesFromMap:   " << &onesFromMap << '\n';
   // std::cout << onesFromMap << std::endl;
 
+
+  if (bufferChunk.size() != arrCmp.size()) {
+    printf("circle %d: <%.2f,%.2f> r=%.2f\n",i,center.x(),center.y(),radius);
+    printf("pixels: <%d,%d> to <%d,%d>\n",minX,minY,maxX,maxY);
+    printf("data: <%d,%d> to <%d,%d>\n",dataMinX,dataMinY,dataMaxX,dataMaxY);
+    std::cout << "buffer:" << bufferChunk.size() << "\n" << bufferChunk << std::endl;
+    std::cout << "arrCmp:" << arrCmp.size() << "\n" << arrCmp << std::endl;
+    // std::cout << "ones:" << ones.size() << "\n" << ones << std::endl;
+  }
   // std::cout << "update bufferChunk\n";
   // bufferChunk = arrCmpFromMap.select(onesFromMap, bufferChunk);
   bufferChunk = arrCmp.select(ones, bufferChunk);

@@ -18,6 +18,7 @@ Eigen::Vector2f circlePosArr[MAX_CIRCLES];
 Eigen::Vector2f circleVelArr[MAX_CIRCLES];
 const Eigen::Vector2f gravity(0,0.000141);
 float r = 15;
+float bounceR = -r;
 
 std::random_device rd;
 std::mt19937 e2(rd());
@@ -43,7 +44,7 @@ void setup(int argc, char *argv[]) {
     circleCount = std::stoi(argv[1]);
   }
   display_size(256,128);
-  frameRate(120);
+  frameRate(60);
   reset();
 }
 #define restitution 0.9
@@ -51,25 +52,25 @@ void setup(int argc, char *argv[]) {
 inline void updateCircle(Eigen::Vector2f& pos, Eigen::Vector2f& vel) {
   vel += gravity * DELTA_T;
   pos += vel * DELTA_T;
-  if (pos.y() >= HEIGHT - r) {
+  if (pos.y() >= HEIGHT - bounceR) {
     vel.y() *= -restitution;
     pos.y() *= bounceDamp-1;
-    pos.y() += (2-bounceDamp)*(HEIGHT - r);
+    pos.y() += (2-bounceDamp)*(HEIGHT - bounceR);
   }
-  if (pos.y() <= r) {
+  if (pos.y() <= bounceR) {
     vel.y() *= -restitution;
     pos.y() *= bounceDamp-1;
-    pos.y() += (2-bounceDamp)*(r);
+    pos.y() += (2-bounceDamp)*(bounceR);
   }
-  if (pos.x() >= WIDTH - r) {
+  if (pos.x() >= WIDTH - bounceR) {
     vel.x() *= -restitution;
     pos.x() *= bounceDamp-1;
-    pos.x() += (2-bounceDamp)*(WIDTH - r);
+    pos.x() += (2-bounceDamp)*(WIDTH - bounceR);
   }
-  if (pos.x() <= r) {
+  if (pos.x() <= bounceR) {
     vel.x() *= -restitution;
     pos.x() *= bounceDamp-1;
-    pos.x() += (2-bounceDamp)*(r);
+    pos.x() += (2-bounceDamp)*(bounceR);
   }
   
   circle(pos,r);
