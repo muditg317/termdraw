@@ -43,7 +43,7 @@ void setup(int argc, char *argv[]) {
     circleCount = std::stoi(argv[1]);
   }
   display_size(256,128);
-  frameRate(60);
+  frameRate(120);
   reset();
 }
 #define restitution 0.9

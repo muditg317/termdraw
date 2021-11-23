@@ -14,10 +14,12 @@ target_include_directories(termdraw_library PUBLIC ${C-Ballz_INCLUDE_DIR})
 
 # This depends on (header only) Eigen3 library
 find_package(Eigen3 CONFIG REQUIRED)
+message(STATUS "Eigen3::Eigen version: ${Eigen3_VERSION}")# Adds Boost::boost
+
 target_link_libraries(termdraw_library PRIVATE Eigen3::Eigen)
 
-# All users of this library will need at least C++11
-# target_compile_features(termdraw_library PUBLIC cxx_std_11)
+# All users of this library will need at least C++17
+target_compile_features(termdraw_library PUBLIC cxx_std_17)
 
 # IDEs should put the headers in a nice place
 source_group(
