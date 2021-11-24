@@ -26,7 +26,6 @@ int getHeight() {
   return _height;
 }
 
-// TermPix **pixelBuffer;
 PixelBuffer pixelBuffer;
 char *consoleBuffer;
 
@@ -78,9 +77,6 @@ inline char pixelsToBraille_offset2(PixBuf<WIDTH_SCALE,HEIGHT_SCALE> pixelGroup)
 }
 
 inline void render(void) {
-  // pixelBuffer(5,5) = 5;
-  // printf("render\n");
-  // char charLine[CONSOLE_HEIGHT * CONSOLE_LINE_SIZE]; // each braille character is 3 bytes
   static char baseBraille[] = "\u2800";
   for (int y = 0; y < CONSOLE_HEIGHT; ++y) {
     for (int x = 0; x < CONSOLE_WIDTH; ++x) {
@@ -106,9 +102,6 @@ inline void render(void) {
 }
 
 void clean(void) {
-  // for (int x = 0; x < WIDTH; x++) {
-  //   memset(pixelBuffer[x], 0, sizeof(TermPix) * HEIGHT);
-  // }
   pixelBuffer.setZero();
 }
 
