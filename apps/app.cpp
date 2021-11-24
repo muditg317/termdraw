@@ -117,7 +117,9 @@ void setup(int argc, char *argv[]) {
   if (argc > 2) {
     r = std::stof(argv[2]) / PIXELS_PER_METER;
   }
-  display_size(256,128);
+
+  display_size_based_on_console();
+
   frameRate(60);
   world.SetAllowSleeping(true);
   world.SetContinuousPhysics(true);

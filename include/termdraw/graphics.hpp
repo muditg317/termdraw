@@ -59,6 +59,12 @@ void setup(int argc, char *argv[]);
 void display_size(int, int);
 
 /**
+ * @brief set the dimensions of the graphics buffer based on the console size
+ * int number of lines to reserve for non-graphics
+ */
+void display_size_based_on_console(int = 0);
+
+/**
  * @brief set the frame rate for animation
  * double the new frame rate
  */

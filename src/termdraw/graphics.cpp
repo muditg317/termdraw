@@ -1,5 +1,7 @@
 #include <termdraw/graphics.hpp>
 
+#include <sys/ioctl.h>
+#include <unistd.h>
 #include <cassert>
 #include <iostream>
 #include <cstring>
@@ -58,6 +60,12 @@ void display_size(int width, int height) {
   dims_set = true;
 
   allocate_buffers();
+}
+
+void display_size_based_on_console(int rowsToSave) {
+  struct winsize w;
+  ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+  display_size(w.ws_col * WIDTH_SCALE, (w.ws_row - rowsToSave - 1) * HEIGHT_SCALE);
 }
 
 void frameRate(double fr) {
@@ -148,9 +156,9 @@ int graphics_main(int argc, char *argv[]) {
   
   printf("Finished termdraw setup!\n\tScreen:    \t%-3dx%3d\n\tConsole:\t%-3dx%3d\n\tFrame Rate:\t%.2f\n", WIDTH, HEIGHT, CONSOLE_WIDTH, CONSOLE_HEIGHT, FRAME_RATE);
 
-  printf("&pixelBuffer = %p\n", &pixelBuffer);
-  printf("&consoleBuffer = %p\n", &consoleBuffer);
-  printf("&argc = %p\n", &argc);
+  // printf("&pixelBuffer = %p\n", &pixelBuffer);
+  // printf("&consoleBuffer = %p\n", &consoleBuffer);
+  // printf("&argc = %p\n", &argc);
 
   int64_t microsDelay = std::floor(1000000.0/FRAME_RATE);
 
