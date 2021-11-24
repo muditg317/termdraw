@@ -11,13 +11,13 @@
 
 #include <Eigen/Eigen>
 
-#define MAX_CIRCLES 20000
+#define MAX_CIRCLES 100000
 static int circleCount = 5;
 
 Eigen::Vector2f circlePosArr[MAX_CIRCLES];
 Eigen::Vector2f circleVelArr[MAX_CIRCLES];
 const Eigen::Vector2f gravity(0,0.000141);
-float r = 15;
+float r = 8;
 float bounceR = -r;
 
 std::random_device rd;
@@ -42,6 +42,9 @@ void setup(int argc, char *argv[]) {
   std::cout << std::endl;
   if (argc > 1) {
     circleCount = std::stoi(argv[1]);
+  }
+  if (argc > 2) {
+    r = std::stof(argv[2]);
   }
   display_size(256,128);
   frameRate(60);

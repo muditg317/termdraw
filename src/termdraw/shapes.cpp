@@ -52,7 +52,7 @@ typedef Eigen::CwiseNullaryOp<
 > MatrixXbConstBig;
 typedef Eigen::Matrix<bool, -1, -1> MatrixXb;
 typedef std::pair<ArrayCompType,MatrixXb> circleData;
-std::map<int, circleData, std::less<int>, Eigen::aligned_allocator<std::pair<const int, circleData>>> circleDataMap;
+std::map<float, circleData, std::less<int>, Eigen::aligned_allocator<std::pair<const float, circleData>>> circleDataMap;
 
 // std::optional<ArrayCompType> arrCmp;
 // std::optional<MatrixXb> ones;
@@ -68,8 +68,8 @@ void circle2(Eigen::Vector2f center, float radius) {
 
 
   bool found = true;
-  decltype(circleDataMap)::iterator circleMapIter(circleDataMap.lower_bound(radCeil2p1));
-  if (circleMapIter == circleDataMap.end() || radCeil2p1 < circleMapIter->first) { // not found
+  decltype(circleDataMap)::iterator circleMapIter(circleDataMap.lower_bound(radius));
+  if (circleMapIter == circleDataMap.end() || radius < circleMapIter->first) { // not found
   // if (lastRadius != radius) {
     found = false;
     // std::cout << "calc stuff for " << radCeil2p1 << "!" << std::endl;
@@ -86,7 +86,7 @@ void circle2(Eigen::Vector2f center, float radius) {
     // std::shared_ptr<ArrayCompType> arrCmpPtr(new ArrayCompType((*(new decltype(arrCmpXpr)(arrCmpXpr))) <= radius*radius));
     auto _arrCmp = (templateMat.cwiseAbs2().array() <= radius*radius).eval();
     // arrCmp = *(new decltype(_arrCmp)(_arrCmp));
-    // std::cout << "arrCmp before map insertion: " << &_arrCmp << '\n' << _arrCmp << std::endl;
+    // std::cout << "templateMap-abs2 before map insertion: \n" << templateMat.cwiseAbs2() << std::endl;
     // arrCmp.emplace(_arrCmp);
     // arrCmp.reshaped()
     // arrCmp = _arrCmp;
@@ -95,7 +95,7 @@ void circle2(Eigen::Vector2f center, float radius) {
     auto _ones = Eigen::DenseBase<PixelBuffer>::Ones(radCeil2p1,radCeil2p1).eval();
     // ones.emplace(_ones);
     // ones = _ones;
-    circleMapIter = circleDataMap.insert(circleMapIter, std::make_pair(radCeil2p1, circleData(_arrCmp,_ones)));     // hinted insertion
+    circleMapIter = circleDataMap.insert(circleMapIter, std::make_pair(radius, circleData(_arrCmp,_ones)));     // hinted insertion
     // std::cout << "right after map insertion: " << &(circleMapIter->second.first) << '\n' << (circleMapIter->second.first) << std::endl;
     // lastRadius = radius;
   } else {
@@ -113,8 +113,8 @@ void circle2(Eigen::Vector2f center, float radius) {
 
   // }
 
-  int minX = int(center.x())-radius;
-  int minY = int(center.y())-radius;
+  int minX = int(center.x())-radCeil;
+  int minY = int(center.y())-radCeil;
   int dataMinX = 0;
   if (minX < 0) {
     dataMinX -= minX;
@@ -126,8 +126,8 @@ void circle2(Eigen::Vector2f center, float radius) {
     minY = 0;
   }
 
-  int maxX = int(center.x())+radius;
-  int maxY = int(center.y())+radius;
+  int maxX = int(center.x())+radCeil;
+  int maxY = int(center.y())+radCeil;
   int dataMaxX = radCeil2p1-1;
   if (maxX >= WIDTH) {
     dataMaxX -= (maxX-WIDTH+1);
