@@ -2,6 +2,7 @@
 #define GRAPHICS_HPP
 
 #include <cassert>
+#include <chrono>
 #include <Eigen/Eigen>
 
 enum TermPix {
@@ -80,15 +81,16 @@ void update(void);
 
 void clean(void);
 
+std::chrono::time_point<std::chrono::system_clock> preloop(int argc, char *argv[]);
+void loop(std::chrono::time_point<std::chrono::system_clock>& t);
+void finish( int signum  = 0);
+
 int graphics_main(int argc, char *argv[]);
 
 #ifdef GRAPHICS_MAIN
-// # ifndef GRAPHICS_HPP_MAIN
-// # define GRAPHICS_HPP_MAIN
 int main(int argc, char *argv[]) {
   graphics_main(argc, argv);
 }
-// # endif
 #endif
 
 

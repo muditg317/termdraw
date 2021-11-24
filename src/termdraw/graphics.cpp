@@ -119,10 +119,48 @@ inline void resetCursor(void) {
 }
 
 std::chrono::time_point<std::chrono::system_clock> start;
+std::chrono::microseconds microSecDelay;
 
 uint32_t framesComputed = 0;
 
-inline void finish( int signum  = 0) {
+std::chrono::time_point<std::chrono::system_clock> preloop(int argc, char *argv[]) {
+  
+  signal(SIGINT, finish);
+  // signal(SIGABRT, finish);
+  // signal(SIGSEGV, finish);
+  signal(SIGTERM, finish);
+
+  setup(argc, argv);
+  assert(dims_set && "Must set dimensions for terminal drawing session! Call `display_size(width,height)`");
+  
+  printf("Finished termdraw setup!\n\tScreen:    \t%-3dx%3d\n\tConsole:\t%-3dx%3d\n\tFrame Rate:\t%.2f\n", WIDTH, HEIGHT, CONSOLE_WIDTH, CONSOLE_HEIGHT, FRAME_RATE);
+
+  // printf("&pixelBuffer = %p\n", &pixelBuffer);
+  // printf("&consoleBuffer = %p\n", &consoleBuffer);
+  // printf("&argc = %p\n", &argc);
+
+  int64_t microsDelay = std::floor(1000000.0/FRAME_RATE);
+  microSecDelay = std::chrono::microseconds(microsDelay);
+  
+  start = std::chrono::system_clock::now();
+  return start;
+}
+
+void loop(std::chrono::time_point<std::chrono::system_clock>& t) {
+  // printf("call update!\n");
+    update();
+    // printf("call render!\n");
+    render();
+    // printf("call reset!\n");
+    resetCursor();
+
+    framesComputed++;
+
+    t += microSecDelay;
+    std::this_thread::sleep_until(t);
+}
+
+void finish( int signum) {
   // if (signum) {
   //   std::cout << "Interrupt signal (" << signum << ") received.\n";
   // }
@@ -146,37 +184,10 @@ inline void finish( int signum  = 0) {
 
 int graphics_main(int argc, char *argv[]) {
 
-  signal(SIGINT, finish);
-  // signal(SIGABRT, finish);
-  // signal(SIGSEGV, finish);
-  signal(SIGTERM, finish);
-
-  setup(argc, argv);
-  assert(dims_set && "Must set dimensions for terminal drawing session! Call `display_size(width,height)`");
-  
-  printf("Finished termdraw setup!\n\tScreen:    \t%-3dx%3d\n\tConsole:\t%-3dx%3d\n\tFrame Rate:\t%.2f\n", WIDTH, HEIGHT, CONSOLE_WIDTH, CONSOLE_HEIGHT, FRAME_RATE);
-
-  // printf("&pixelBuffer = %p\n", &pixelBuffer);
-  // printf("&consoleBuffer = %p\n", &consoleBuffer);
-  // printf("&argc = %p\n", &argc);
-
-  int64_t microsDelay = std::floor(1000000.0/FRAME_RATE);
-
-  std::chrono::time_point<std::chrono::system_clock> t = std::chrono::system_clock::now();
-  start = t;
+  std::chrono::time_point<std::chrono::system_clock> t = preloop(argc, argv);
 
   while (1) {
-    // printf("call update!\n");
-    update();
-    // printf("call render!\n");
-    render();
-    // printf("call reset!\n");
-    resetCursor();
-
-    framesComputed++;
-
-    t += std::chrono::microseconds(microsDelay);
-    std::this_thread::sleep_until(t);
+    loop(t);
   }
 
   finish();

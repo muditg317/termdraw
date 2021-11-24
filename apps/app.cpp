@@ -1,5 +1,6 @@
-#define GRAPHICS_MAIN
+#define KEYBOARD_MAIN
 #include <termdraw/graphics.hpp>
+#include <termdraw/keyboard.hpp>
 #include <termdraw/shapes.hpp>
 
 #include <fmt/format.h>
@@ -15,7 +16,6 @@
 #define PIXELS_PER_METER 10
 #define WORLD_WIDTH (WIDTH/PIXELS_PER_METER)
 #define WORLD_HEIGHT (HEIGHT/PIXELS_PER_METER)
-
 
 std::random_device rd;
 std::mt19937 e2(rd());
@@ -55,7 +55,7 @@ void addFixtureToBodyWithShape(b2Body *body, b2Shape *shape) {
   b2FixtureDef fixtureDef;
   fixtureDef.shape = shape;
   fixtureDef.density = 1.0f;
-  fixtureDef.friction = 0.3f;
+  fixtureDef.friction = 0.0f;
   fixtureDef.restitution = 1.0f;
   fixtureDef.filter.categoryBits = 0x02;
   fixtureDef.filter.maskBits = 0xffff;
@@ -105,6 +105,17 @@ void reset() {
   }
 }
 
+bool handler(char c) {
+  // printf("got %c\n",c);
+  if (c=='q') {
+    return true;
+  }
+  if (c == 'r') {
+    reset();
+  }
+  return false;
+}
+
 void setup(int argc, char *argv[]) {
   std::cout << argc << " args:\t";
   for (int i = 0; i < argc; i++) {
@@ -118,7 +129,9 @@ void setup(int argc, char *argv[]) {
     r = std::stof(argv[2]) / PIXELS_PER_METER;
   }
 
-  display_size_based_on_console();
+  onKeyPress(handler);
+
+  display_size_based_on_console(5);
 
   frameRate(60);
   world.SetAllowSleeping(true);
