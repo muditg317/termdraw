@@ -22,7 +22,8 @@ double getFrameRate();
 #define MAX_FR_RECOMMENDATION 60.0
 
 // millis change in time per frame
-#define DELTA_T (1000.0 / (FRAME_RATE))
+#define DELTA_T_MS (1000.0 / (FRAME_RATE))
+#define DELTA_T_SEC (1.0 / (FRAME_RATE))
 
 int getWidth();
 #define WIDTH (getWidth())

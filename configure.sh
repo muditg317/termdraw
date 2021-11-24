@@ -1,8 +1,8 @@
 set -e
 
 build_type=RelWithDebInfo
-build_type=Debug
 build_type=Release
+build_type=Debug
 
 _cmake=/usr/bin/cmake
 _cc=/bin/clang

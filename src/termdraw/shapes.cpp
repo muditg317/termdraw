@@ -36,7 +36,6 @@ void circle(Eigen::Vector2f center, float radius) {
     maxY = HEIGHT-1;
   }
 
-
   bool found = true;
   decltype(circleDataMap)::iterator circleMapIter(circleDataMap.lower_bound(radius));
   if (circleMapIter == circleDataMap.end() || radius < circleMapIter->first) { // not found
@@ -53,6 +52,9 @@ void circle(Eigen::Vector2f center, float radius) {
     // if (i%1==0) std::cout << "pre calculated stuff for " << radCeil2p1 << "!" << std::endl;
   }
 
+  if (minX > WIDTH-1 || maxX < 0 || minY > HEIGHT-1 || maxY < 0) {
+    return;
+  }
 
   auto bufferChunk = BUFFER(Eigen::seq(minX,maxX),Eigen::seq(minY,maxY));//.block(minX,minY,maxX-minX+1,maxY-minY+1);
 

@@ -122,7 +122,7 @@ inline void finish( int signum  = 0) {
 
   std::chrono::time_point<std::chrono::system_clock> sim_end = std::chrono::system_clock::now();
   auto timeMsComputing = (std::chrono::duration_cast<std::chrono::milliseconds>(sim_end.time_since_epoch()) - std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch())).count();
-  long int timeMsComputed = (int) (framesComputed * DELTA_T);
+  long int timeMsComputed = (int) (framesComputed * DELTA_T_MS);
   // auto timeMsComputing = std::chrono::duration_cast<std::chrono::milliseconds>(timeComputing.time_since_epoch());
 
   double ratio = ((float)timeMsComputed)/((float)timeMsComputing);

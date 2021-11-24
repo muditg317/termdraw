@@ -3,8 +3,8 @@
 
 # Optionally glob, but only for CMake 3.12 or later:
 set(C-Ballz_INCLUDE_DIR "${C-Ballz_SOURCE_DIR}/include")
-file(GLOB TERMDRAW_HEADER_LIST CONFIGURE_DEPENDS "${C-Ballz_INCLUDE_DIR}/termdraw/*.hpp")
-file(GLOB TERMDRAW_SOURCE_LIST CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
+file(GLOB_RECURSE TERMDRAW_HEADER_LIST CONFIGURE_DEPENDS "${C-Ballz_INCLUDE_DIR}/termdraw/*.hpp")
+file(GLOB_RECURSE TERMDRAW_SOURCE_LIST CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
 # Make an automatic library - will be static or dynamic based on user setting
 add_library(termdraw_library ${TERMDRAW_SOURCE_LIST} ${TERMDRAW_HEADER_LIST})
