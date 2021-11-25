@@ -3,7 +3,10 @@
 
 #include <cassert>
 #include <chrono>
+#include <cstdarg>
+
 #include <Eigen/Eigen>
+#include <fmt/format.h>
 
 enum TermPix {
   OFF = 0,
@@ -45,7 +48,6 @@ PixelBuffer& getPixelBuffer();
 
 static_assert(HEIGHT_SCALE == WIDTH_SCALE * 2, "Height must be scaled exactly twice as much as width!!");
 
-
 /**
  * @brief setup for 
  * 
@@ -71,19 +73,34 @@ void display_size_based_on_console(int = 0);
  */
 void frameRate(double);
 
+void _graphics_print_string(std::string);
+
+// template<typename... Params>
+inline void graphics_printf(const char *format, ...) {
+  static char buffer[1000];
+  va_list args;
+  va_start(args, format);
+  vsprintf(buffer, format, args);
+  // std::string result = fmt::format(format, std::forward<Params>(ps)...);
+  // _graphics_print_string(result);
+  _graphics_print_string(*new std::string(buffer));
+  va_end(args);
+}
+
+
 /**
  * @brief update the pixel buffer however desired before the next render call
- * 
  */
 void update(void);
 
-// void render(void);
-
+/**
+ * @brief Zero out the pixel buffer
+ */
 void clean(void);
 
-std::chrono::time_point<std::chrono::system_clock> preloop(int argc, char *argv[]);
-void loop(std::chrono::time_point<std::chrono::system_clock>& t);
-void finish( int signum  = 0);
+void graphics_preloop(int argc, char *argv[]);
+void graphics_loop();
+void graphics_finish(int signum  = 0);
 
 int graphics_main(int argc, char *argv[]);
 

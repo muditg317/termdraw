@@ -4,18 +4,20 @@
 #include <sys/select.h>
 #include <termios.h>
 #include <unistd.h>
+#include <csignal>
 
+#define USE_KEYBOARD
 
 #define NB_DISABLE 0
 #define NB_ENABLE 1
 
+static struct timeval tv;
+static fd_set fds;
 
 inline int inputAvailable() {
-  struct timeval tv;
-  fd_set fds;
-  tv.tv_sec = 0;
-  tv.tv_usec = 0;
-  FD_ZERO(&fds);
+  // tv.tv_sec = 0;
+  // tv.tv_usec = 0;
+  // FD_ZERO(&fds);
   FD_SET(STDIN_FILENO, &fds); //STDIN_FILENO is 0
   select(STDIN_FILENO+1, &fds, NULL, NULL, &tv);
   return FD_ISSET(STDIN_FILENO, &fds);
@@ -39,34 +41,55 @@ void setNonBlocking(bool state) {
   tcsetattr(STDIN_FILENO, TCSANOW, &ttystate);
 }
 
-keyPressHandler *handler = 0;
+static keyPressHandler *handler = 0;
 void onKeyPress(keyPressHandler _handler) {
   handler = _handler;
 }
 
-int keyboard_main(int argc, char *argv[]) {
+static char c;
+static bool quit;
 
-  auto t = preloop(argc, argv);
-
+void keyboard_preloop() {
   assert(handler != 0 && "Must set keypress handler if using keyboard main!");
-
-  char c;
-  bool i = false;
   setNonBlocking(NB_ENABLE);
-  while (!i) {
-    if (inputAvailable()) {
-      c=fgetc(stdin);
-      // printf("\x1b[1D");
-      printf("\b");
-      // if (handler) {
-      // dont need to check for handler existence because of assertion
-      i = handler(c);
-      // }
-    }
-    loop(t);
-  }
-  setNonBlocking(NB_DISABLE);
+  tv.tv_sec = 0;
+  tv.tv_usec = 0;
+  FD_ZERO(&fds);
+  FD_SET(STDIN_FILENO, &fds); //STDIN_FILENO is 0
 
-  finish();
+  quit = false;
+}
+
+void keyboard_loop(void) {
+  if (inputAvailable()) {
+    c = fgetc(stdin);
+    // graphics_printf("\b");
+    quit = handler(c);
+  }
+}
+
+void keyboard_finish(int signum) {
+  setNonBlocking(NB_DISABLE);
+}
+
+int keyboard_main(int argc, char *argv[]) {
+  #ifdef USE_KEYBOARD
+  
+  signal(SIGINT, keyboard_finish);
+  signal(SIGTERM, keyboard_finish);
+
+  keyboard_preloop();
+  graphics_preloop(argc, argv);
+  
+  while (!quit) {
+    keyboard_loop();
+    graphics_loop();
+  }
+
+  keyboard_finish();
+  graphics_finish();
   return 0;
+  #else
+  return graphics_main(argc, argv);
+  #endif
 }

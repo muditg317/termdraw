@@ -9,6 +9,10 @@ typedef bool keyPressHandler(char);
  */
 void onKeyPress(keyPressHandler *);
 
+void keyboard_preloop(void);
+void keyboard_loop(void);
+void keyboard_finish(int signum=0);
+
 int keyboard_main(int argc, char *argv[]);
 
 #ifdef KEYBOARD_MAIN

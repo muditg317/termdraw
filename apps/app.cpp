@@ -3,25 +3,26 @@
 #include <termdraw/keyboard.hpp>
 #include <termdraw/shapes.hpp>
 
-#include <fmt/format.h>
+// #include <fmt/format.h>
 #include <iostream>
 #include <vector>
 #include <tuple>
 #include <random>
 #include <cmath>
+#include <chrono>
 
 #include <Eigen/Eigen>
 #include <box2d/box2d.h>
 
-#define PIXELS_PER_METER 10
+#define PIXELS_PER_METER 15
 #define WORLD_WIDTH (WIDTH/PIXELS_PER_METER)
 #define WORLD_HEIGHT (HEIGHT/PIXELS_PER_METER)
 
 std::random_device rd;
 std::mt19937 e2(rd());
-// std::normal_distribution<> posDist(0,0.5);
-std::normal_distribution<> xVelDist(5,15);
-std::uniform_real_distribution<> yVelDist(0,5);
+std::uniform_real_distribution<> posDist(0,1);
+std::normal_distribution<> xVelDist(0,1);
+std::normal_distribution<> yVelDist(0,1);
 
 b2Vec2 gravity(0.0f, 0.0f);
 b2World world(gravity);
@@ -57,6 +58,7 @@ void addFixtureToBodyWithShape(b2Body *body, b2Shape *shape) {
   fixtureDef.density = 1.0f;
   fixtureDef.friction = 0.0f;
   fixtureDef.restitution = 1.0f;
+  fixtureDef.restitutionThreshold = 0;
   fixtureDef.filter.categoryBits = 0x02;
   fixtureDef.filter.maskBits = 0xffff;
   body->CreateFixture(&fixtureDef);
@@ -88,6 +90,9 @@ void makeBoundingBox(float width, float height) {
   addStaticRect(-1,height/2,1,height/2);
 }
 
+static std::chrono::time_point<std::chrono::system_clock> prevTime;
+static float deltaT;
+
 void reset() {
   while (world.GetBodyCount() > 0) {
     world.DestroyBody(world.GetBodyList());
@@ -97,20 +102,26 @@ void reset() {
 
   for (int i = 0; i < circleCount; i++) {
     addDynamicCircle(
-      i*WORLD_WIDTH/circleCount*0.9 + 0.05*WORLD_WIDTH,
-      0.1*WORLD_HEIGHT,
+      posDist(e2)*WORLD_WIDTH,
+      posDist(e2)*WORLD_HEIGHT,
+      // i*WORLD_WIDTH/circleCount*0.9 + 0.05*WORLD_WIDTH,
+      // 0.1*WORLD_HEIGHT,
       xVelDist(e2),
       yVelDist(e2),
       r);
   }
+  prevTime = std::chrono::system_clock::now();
+
 }
 
 bool handler(char c) {
-  // printf("got %c\n",c);
+  // graphics_printf("got %c\n",c);
   if (c=='q') {
+    graphics_printf("quit!\n");
     return true;
   }
   if (c == 'r') {
+    graphics_printf("reset!\n");
     reset();
   }
   return false;
@@ -129,9 +140,13 @@ void setup(int argc, char *argv[]) {
     r = std::stof(argv[2]) / PIXELS_PER_METER;
   }
 
-  onKeyPress(handler);
+  // printf("\033[6n\n");
 
-  display_size_based_on_console(5);
+  onKeyPress(handler);
+  deltaT = DELTA_T_SEC;
+
+  // display_size_based_on_console(5);
+  display_size(256,128);
 
   frameRate(60);
   world.SetAllowSleeping(true);
@@ -157,7 +172,14 @@ FixtureDrawer fixtureCallback;
 
 void update() {
   clean();
-  world.Step(DELTA_T_SEC, 8, 1);
+
+  auto currTime = std::chrono::system_clock::now();
+  // deltaT = (currTime - prevTime).count() / 1000000000.0;
+  prevTime = currTime;
+
+  // std::cout << "delta t: " << deltaT << std::endl;
+
+  world.Step(deltaT, 8, 1);
 
   world.QueryAABB(&fixtureCallback, worldBounds);
 
