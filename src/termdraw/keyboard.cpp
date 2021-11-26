@@ -1,10 +1,15 @@
 #include <termdraw/graphics.hpp>
 #include <termdraw/keyboard.hpp>
 
+#include <iostream>
 #include <sys/select.h>
+#include <sys/poll.h>
 #include <termios.h>
 #include <unistd.h>
 #include <csignal>
+#include <sys/ioctl.h>
+// #include <sys/str
+// #include
 
 #define USE_KEYBOARD
 
@@ -15,12 +20,18 @@ static struct timeval tv;
 static fd_set fds;
 
 inline int inputAvailable() {
-  // tv.tv_sec = 0;
-  // tv.tv_usec = 0;
-  // FD_ZERO(&fds);
   FD_SET(STDIN_FILENO, &fds); //STDIN_FILENO is 0
   select(STDIN_FILENO+1, &fds, NULL, NULL, &tv);
   return FD_ISSET(STDIN_FILENO, &fds);
+
+
+  // struct pollfd pollfd;
+  // int ret;
+  // pollfd.fd = STDIN_FILENO; /* this is STDIN */
+  // pollfd.events = POLLIN;
+  // ret = poll(&pollfd, 1, 0);
+  // return ret;
+
 }
 
 void setNonBlocking(bool state) {
@@ -55,16 +66,59 @@ void keyboard_preloop() {
   tv.tv_sec = 0;
   tv.tv_usec = 0;
   FD_ZERO(&fds);
-  FD_SET(STDIN_FILENO, &fds); //STDIN_FILENO is 0
 
   quit = false;
 }
 
 void keyboard_loop(void) {
-  if (inputAvailable()) {
-    c = fgetc(stdin);
-    // graphics_printf("\b");
+  
+  int n = 0;
+  int ioRes = ioctl(STDIN_FILENO, FIONREAD, &n);
+  while (ioRes == 0 && n > 0) {
+    std::vector<char> bytes(n);
+
+    while (n--) {
+      bytes.push_back(fgetc(stdin));
+      graphics_printf("read byte: %c|%d",bytes.back(),bytes.back());
+      c = bytes.back();
+    }
+
+    // c = fgetc(stdin);
+    // if (c == '\e') { // got '\033'
+    //   // graphics_printf("special character pressed! %c|%d\n",c,c);
+    //   // graphics_printf("more available: %d\n",inputAvailable());
+    //   graphics_printf("got special %c|%d\n",c,c);
+    //   c = fgetc(stdin);
+    //   graphics_printf("got special %c|%d\n",c,c);
+    //   c = fgetc(stdin);
+    //   graphics_printf("got special %c|%d\n",c,c);
+    // }
+
+    // int n = 0;
+    // int ioRes = ioctl(STDIN_FILENO, FIONREAD, &n);
+    // graphics_printf("ioctl result: %d, n:%d\n", ioRes, n);
+    // while (ioRes == 0 && n > 0) {
+    //   graphics_printf("bytes available: %d\n",n);
+    //   c = fgetc(stdin);
+    //   graphics_printf("reading |c:%c|d:%d|\n",c,c);
+    //   // if (c=='\e') {
+    //   //   graphics_printf("got \\e! waiting...\n");
+    //   //   usleep(1000000);
+    //   //   graphics_printf("done waiting!\n");
+    //   // }
+    //   ioRes = ioctl(STDIN_FILENO, FIONREAD, &n);
+    //   graphics_printf("ioctl result: %d, n:%d\n", ioRes, n);
+    // }
+
+    // char str[100];
+    // // scanf("%s",str);
+    // int i = 0;
+    // while ((*(str+i++) = fgetc(stdin)) != EOF);
+    // str[i]=0;
+    // // fgets(str, 10, stdin);
+    // graphics_printf("read string: %s\n",str);
     quit = handler(c);
+    ioRes = ioctl(STDIN_FILENO, FIONREAD, &n);
   }
 }
 

@@ -115,7 +115,7 @@ void reset() {
 }
 
 bool handler(char c) {
-  // graphics_printf("got %c\n",c);
+  graphics_printf("got %c|%d\n",c,c);
   if (c=='q') {
     graphics_printf("quit!\n");
     return true;
@@ -140,7 +140,6 @@ void setup(int argc, char *argv[]) {
     r = std::stof(argv[2]) / PIXELS_PER_METER;
   }
 
-  // printf("\033[6n\n");
 
   onKeyPress(handler);
   deltaT = DELTA_T_SEC;

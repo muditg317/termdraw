@@ -75,14 +75,17 @@ void frameRate(double);
 
 void _graphics_print_string(std::string);
 
-// template<typename... Params>
+
 inline void graphics_printf(const char *format, ...) {
+  // ===== Option if buffer sizing becomes an issue
+  // int size = snprintf(NULL, 0, "%d", 132);
+  // char * a = malloc(size + 1);
+  // =================
   static char buffer[1000];
   va_list args;
   va_start(args, format);
   vsprintf(buffer, format, args);
-  // std::string result = fmt::format(format, std::forward<Params>(ps)...);
-  // _graphics_print_string(result);
+  // std::printf("Got printf call with format |%s| and result |%s|\n", format, buffer);
   _graphics_print_string(*new std::string(buffer));
   va_end(args);
 }
