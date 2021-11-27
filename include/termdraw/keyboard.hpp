@@ -1,7 +1,38 @@
 #ifndef KEYBOARD_HPP
 #define KEYBOARD_HPP
 
-typedef bool keyPressHandler(char);
+enum SpecialKey {
+  NONE = 0,
+  ESC,
+  INSERT,
+  DELETE,
+  UP,
+  DOWN,
+  LEFT,
+  RIGHT,
+  PAGE_UP,
+  PAGE_DOWN,
+  HOME,
+  END,
+};
+
+typedef struct KeyPressEvent {
+  int numBytes;
+  char *allBytes;
+  char c;
+  bool shift;
+  bool ctrl;
+  bool alt;
+  SpecialKey specialKey;
+
+  KeyPressEvent(int numBytesToRead);
+  void processSpecialBytes(void);
+
+  ~KeyPressEvent();
+
+} KeyPressEvent;
+
+typedef bool keyPressHandler(KeyPressEvent);
 
 /**
  * @brief register a key pres handler for the graphics session

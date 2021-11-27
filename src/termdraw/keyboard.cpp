@@ -16,23 +16,55 @@
 #define NB_DISABLE 0
 #define NB_ENABLE 1
 
-static struct timeval tv;
-static fd_set fds;
-
-inline int inputAvailable() {
-  FD_SET(STDIN_FILENO, &fds); //STDIN_FILENO is 0
-  select(STDIN_FILENO+1, &fds, NULL, NULL, &tv);
-  return FD_ISSET(STDIN_FILENO, &fds);
 
 
-  // struct pollfd pollfd;
-  // int ret;
-  // pollfd.fd = STDIN_FILENO; /* this is STDIN */
-  // pollfd.events = POLLIN;
-  // ret = poll(&pollfd, 1, 0);
-  // return ret;
+KeyPressEvent::KeyPressEvent(int numBytesToRead) : numBytes(numBytesToRead) {
+  // graphics_printf("read %d bytes from buffer!", numBytes);
+  allBytes = (char *) malloc(sizeof(char) * numBytes);
+  assert (allBytes == nullptr && "Malloc failed for keypress event creation!");
+  // allBytes = fgets(allBytes, numBytes, stdin);
+  for (int i = 0; i < numBytes; i++) {
+    allBytes[i] = fgetc(stdin);
+    // graphics_printf("Byte read: %c|%d\n",allBytes[i],allBytes[i]);
+  }
+  specialKey = NONE;
+  if (*allBytes == '\e') {
+    processSpecialBytes();
+  }
+  c = allBytes[numBytes-1];
+}
+
+void KeyPressEvent::processSpecialBytes(void) {
+  assert(*allBytes == '\e' && "Cannot process special bytes for non control sequence bytes!");
+  if (numBytes == 1) { // just the '\e'
+    specialKey = ESC;
+    graphics_printf("Got ESC!\n");
+    return;
+  }
 
 }
+
+KeyPressEvent::~KeyPressEvent() {
+  free(allBytes);
+}
+
+// static struct timeval tv;
+// static fd_set fds;
+
+// inline int inputAvailable() {
+//   FD_SET(STDIN_FILENO, &fds); //STDIN_FILENO is 0
+//   select(STDIN_FILENO+1, &fds, NULL, NULL, &tv);
+//   return FD_ISSET(STDIN_FILENO, &fds);
+
+
+//   // struct pollfd pollfd;
+//   // int ret;
+//   // pollfd.fd = STDIN_FILENO; /* this is STDIN */
+//   // pollfd.events = POLLIN;
+//   // ret = poll(&pollfd, 1, 0);
+//   // return ret;
+
+// }
 
 void setNonBlocking(bool state) {
   struct termios ttystate;
@@ -63,62 +95,24 @@ static bool quit;
 void keyboard_preloop() {
   assert(handler != 0 && "Must set keypress handler if using keyboard main!");
   setNonBlocking(NB_ENABLE);
-  tv.tv_sec = 0;
-  tv.tv_usec = 0;
-  FD_ZERO(&fds);
+  // tv.tv_sec = 0;
+  // tv.tv_usec = 0;
+  // FD_ZERO(&fds);
 
   quit = false;
 }
 
+
 void keyboard_loop(void) {
-  
-  int n = 0;
-  int ioRes = ioctl(STDIN_FILENO, FIONREAD, &n);
-  while (ioRes == 0 && n > 0) {
-    std::vector<char> bytes(n);
-
-    while (n--) {
-      bytes.push_back(fgetc(stdin));
-      graphics_printf("read byte: %c|%d",bytes.back(),bytes.back());
-      c = bytes.back();
-    }
-
-    // c = fgetc(stdin);
-    // if (c == '\e') { // got '\033'
-    //   // graphics_printf("special character pressed! %c|%d\n",c,c);
-    //   // graphics_printf("more available: %d\n",inputAvailable());
-    //   graphics_printf("got special %c|%d\n",c,c);
-    //   c = fgetc(stdin);
-    //   graphics_printf("got special %c|%d\n",c,c);
-    //   c = fgetc(stdin);
-    //   graphics_printf("got special %c|%d\n",c,c);
+  static int n = 0;
+  while (ioctl(STDIN_FILENO, FIONREAD, &n) == 0 && n > 0) {
+    // std::vector<char> bytes(n);
+    // while (n--) {
+    //   bytes.push_back(fgetc(stdin));
+    //   graphics_printf("read byte: %c|%d",bytes.back(),bytes.back());
+    //   // c = bytes.back();
     // }
-
-    // int n = 0;
-    // int ioRes = ioctl(STDIN_FILENO, FIONREAD, &n);
-    // graphics_printf("ioctl result: %d, n:%d\n", ioRes, n);
-    // while (ioRes == 0 && n > 0) {
-    //   graphics_printf("bytes available: %d\n",n);
-    //   c = fgetc(stdin);
-    //   graphics_printf("reading |c:%c|d:%d|\n",c,c);
-    //   // if (c=='\e') {
-    //   //   graphics_printf("got \\e! waiting...\n");
-    //   //   usleep(1000000);
-    //   //   graphics_printf("done waiting!\n");
-    //   // }
-    //   ioRes = ioctl(STDIN_FILENO, FIONREAD, &n);
-    //   graphics_printf("ioctl result: %d, n:%d\n", ioRes, n);
-    // }
-
-    // char str[100];
-    // // scanf("%s",str);
-    // int i = 0;
-    // while ((*(str+i++) = fgetc(stdin)) != EOF);
-    // str[i]=0;
-    // // fgets(str, 10, stdin);
-    // graphics_printf("read string: %s\n",str);
-    quit = handler(c);
-    ioRes = ioctl(STDIN_FILENO, FIONREAD, &n);
+    quit = handler(KeyPressEvent(n));
   }
 }
 

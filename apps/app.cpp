@@ -114,7 +114,8 @@ void reset() {
 
 }
 
-bool handler(char c) {
+bool handler(KeyPressEvent event) {
+  char c = event.c;
   graphics_printf("got %c|%d\n",c,c);
   if (c=='q') {
     graphics_printf("quit!\n");
