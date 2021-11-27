@@ -113,8 +113,6 @@ void _graphics_print_string(std::string result) {
 
   std::vector<std::string> resLines = splitByDelimToCstr(result, "\n");
   // std::cout << "internal printer -- lines: " << resLines.size() << std::endl;
-  // std::vector<std::string> newLines;
-  // newLines.reserve(resLines.size());
   std::string lastLine = resLines.back();
   for (std::string line : resLines) {
     // std::cout << "internal printer -- line: " << line << std::endl;
@@ -124,7 +122,6 @@ void _graphics_print_string(std::string result) {
       }
       formatString = formatString.substr(0, formatString.size()-1); // remove \n
     }
-    // line.back()
     // std::cout << "internal printer -- format: " << formatString << std::endl;
     std::printf(formatString.c_str(), line.c_str());
   }
