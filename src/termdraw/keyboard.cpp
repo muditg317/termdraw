@@ -6,16 +6,11 @@
 #include <sys/ioctl.h>
 #include <cctype>
 
-#define USE_KEYBOARD
-
-#define NB_DISABLE 0
-#define NB_ENABLE 1
-
-
 KeyPressEvent::KeyPressEvent(char byte) :
   c(byte),
   numBytes(1),
   specialKey(NONE),
+  modified(false),
   ctrl(false),
   alt(false),
   shift(false) {};
@@ -23,19 +18,16 @@ KeyPressEvent::KeyPressEvent(char byte) :
 KeyPressEvent::KeyPressEvent(char *inputBytes, int incomingByteCount) :
   numBytes(incomingByteCount),
   specialKey(NONE),
+  modified(false),
   ctrl(false),
   alt(false),
   shift(false) {
   // graphics_printf("read %d bytes from buffer!", numBytes);
-  // allBytes = (char *) malloc(sizeof(char) * numBytes + 1);
-  // assert (allBytes == nullptr && "Malloc failed for keypress event creation!");
-  // allBytes = fgets(allBytes, numBytes, stdin);
   for (int i = 0; i < numBytes; i++) {
     allBytes[i] = inputBytes[i];
   }
   allBytes[numBytes] = 0;
   // graphics_printf("Bytes (%d) read: %c\n",numBytes,*allBytes);
-  // specialKey = NONE;
   if (*allBytes == '\e') {
     processSpecialBytes();
   }
@@ -49,7 +41,6 @@ void KeyPressEvent::processSpecialBytes(void) {
     // graphics_printf("Got ESC!\n");
     return;
   }
-  // assert(isupper(allBytes[numBytes-1]) && "Control sequence must end with capital letter!");
   if (allBytes[1] == '[') { // control sequence starts with '['
     switch (allBytes[numBytes-1]) { // switch on the last character of the event
       case 'A':
@@ -88,6 +79,7 @@ void KeyPressEvent::processSpecialBytes(void) {
         break;
     }
     if (allBytes[3] == ';') { // has modifiers
+      modified = true;
       //     +   +shift - 50 == 110010
       //     +alt+      - 51 == 110011
       //     +alt+shift - 52 == 110100
@@ -103,22 +95,18 @@ void KeyPressEvent::processSpecialBytes(void) {
       ctrl = (((allBytes[4] & 0b1000) >> 3) != ((allBytes[4] & 0b100) >> 2)) && allBytes[4] != 52;
     }
   } else if (std::islower(allBytes[1])) {
+    modified = true;
     alt = true;
     c = allBytes[1];
-    specialKey = ALT_LOWERCASE;
+    // specialKey = ALT_LOWERCASE;
   }
 }
-
-// KeyPressEvent::~KeyPressEvent() {
-//   free(allBytes);
-// }
 
 static keyPressHandler *handler = 0;
 void onKeyPress(keyPressHandler _handler) {
   handler = _handler;
 }
 
-static char c;
 static bool quit;
 
 void keyboard_preloop() {
@@ -131,15 +119,12 @@ void keyboard_preloop() {
 void keyboard_loop(void) {
   static int n = 0;
   while (ioctl(STDIN_FILENO, FIONREAD, &n) == 0 && n > 0) {
-    // char *buffer = (char *) malloc(sizeof(char) * n);
-    // assert (buffer == nullptr && "Malloc failed for keypress event creation!");
     assert(n <= MAX_INPUT_BYTES && "Cannot buffer more than MAX_INPUT_BYTES characters! must input slower");
     static char buffer[MAX_INPUT_BYTES];
     for (int i = 0; i < n; i++) {
       buffer[i] = fgetc(stdin);
       // graphics_printf("read byte: %c|%d\n", buffer[i], buffer[i]);
     }
-    // bool inControlSequence = false;
     int controlSeqStart = -1;
     int controlSeqEnd = -1;
 
@@ -171,7 +156,6 @@ void keyboard_loop(void) {
       controlSeqEnd = n-1;
       quit = handler(KeyPressEvent(buffer + controlSeqStart, controlSeqEnd - controlSeqStart + 1));
     }
-    // free(buffer);
   }
 }
 
@@ -180,8 +164,6 @@ void keyboard_finish(int signum) {
 }
 
 int keyboard_main(int argc, char *argv[]) {
-  #ifdef USE_KEYBOARD
-  
   signal(SIGINT, keyboard_finish);
   signal(SIGTERM, keyboard_finish);
 
@@ -196,7 +178,4 @@ int keyboard_main(int argc, char *argv[]) {
   keyboard_finish();
   graphics_finish();
   return 0;
-  #else
-  return graphics_main(argc, argv);
-  #endif
 }

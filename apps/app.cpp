@@ -116,12 +116,11 @@ void reset() {
 
 bool handler(KeyPressEvent event) {
   char c = event.c;
-  if (event.specialKey) {
+  if (event.specialKey)
     graphics_printf("Got special key! %s", special_key_names[event.specialKey]);
-    graphics_printf("Modifiers: ctrl:%d|alt:%d|shift:%d",event.ctrl,event.alt,event.shift);
-  } else {
+  else
     graphics_printf("got %c|%d\n",c,c);
-  }
+  if (event.modified) graphics_printf("Modifiers: ctrl:%d|alt:%d|shift:%d",event.ctrl,event.alt,event.shift);
   if (c=='q') {
     graphics_printf("quit!\n");
     return true;

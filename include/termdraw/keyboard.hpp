@@ -34,6 +34,7 @@ typedef struct KeyPressEvent {
   int numBytes;
   char allBytes[MAX_INPUT_BYTES];
   char c;
+  bool modified;
   bool shift;
   bool ctrl;
   bool alt;
