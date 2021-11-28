@@ -146,7 +146,7 @@ void setup(int argc, char *argv[]) {
   }
 
 
-  onKeyPress(handler);
+  registerKeyPressHandler(handler);
   deltaT = DELTA_T_SEC;
 
   // display_size_based_on_console(5);
@@ -199,3 +199,4 @@ void update() {
   // }
 }
 
+void finish(void) {}

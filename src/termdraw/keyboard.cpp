@@ -5,6 +5,7 @@
 #include <csignal>
 #include <sys/ioctl.h>
 #include <cctype>
+#include <termios.h>
 
 KeyPressEvent::KeyPressEvent(char byte) :
   c(byte),
@@ -17,6 +18,7 @@ KeyPressEvent::KeyPressEvent(char byte) :
 
 KeyPressEvent::KeyPressEvent(char *inputBytes, int incomingByteCount) :
   numBytes(incomingByteCount),
+  c(0),
   specialKey(NONE),
   modified(false),
   ctrl(false),
@@ -31,7 +33,7 @@ KeyPressEvent::KeyPressEvent(char *inputBytes, int incomingByteCount) :
   if (*allBytes == '\e') {
     processSpecialBytes();
   }
-  c = allBytes[numBytes-1];
+  // c = 0;//allBytes[numBytes-1];
 }
 
 void KeyPressEvent::processSpecialBytes(void) {
@@ -103,15 +105,20 @@ void KeyPressEvent::processSpecialBytes(void) {
 }
 
 static keyPressHandler *handler = 0;
-void onKeyPress(keyPressHandler _handler) {
+void registerKeyPressHandler(keyPressHandler _handler) {
   handler = _handler;
 }
 
 static bool quit;
+static struct termios oldSettings, newSettings;
 
 void keyboard_preloop() {
   assert(handler != 0 && "Must set keypress handler if using keyboard main!");
 
+  tcgetattr(STDIN_FILENO, &oldSettings );
+  newSettings = oldSettings;
+  newSettings.c_lflag &= (~ICANON & ~ECHO);
+  tcsetattr(STDIN_FILENO, TCSANOW, &newSettings );
   quit = false;
 }
 
@@ -160,7 +167,8 @@ void keyboard_loop(void) {
 }
 
 void keyboard_finish(int signum) {
-
+  graphics_printf("Reset terminal settings!");
+  tcsetattr(STDIN_FILENO, TCSANOW, &oldSettings );
 }
 
 int keyboard_main(int argc, char *argv[]) {

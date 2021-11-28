@@ -24,19 +24,19 @@ inline void circle(float x, float y, float r) {
 /**
  * @brief draw rect with top-left corner and specified dims
  * Eigen::Vector2f corner-topleft (x,y)
- * Eigen::Vector2f dims           (w,l)
+ * Eigen::Vector2f dims           (w,h)
  */
 void rect(Eigen::Vector2f,Eigen::Vector2f);
 
 /**
- * @brief draw rect starting at x,y with dims w,l
+ * @brief draw rect starting at x,y with dims w,h
  * float x
  * float y
  * float width
- * float length
+ * float height
  */
-inline void rect(float x, float y, float w, float l) {
-  return rect(Eigen::Vector2f(x,y), Eigen::Vector2f(w,l));
+inline void rect(float x, float y, float w, float h) {
+  return rect(Eigen::Vector2f(x,y), Eigen::Vector2f(w,h));
 }
 
 

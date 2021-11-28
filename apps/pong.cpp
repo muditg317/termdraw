@@ -14,28 +14,22 @@
 #include <Eigen/Eigen>
 #include <box2d/box2d.h>
 
-#define PIXELS_PER_METER 15
+#define PIXELS_PER_METER 15.0f
 #define WORLD_WIDTH (WIDTH/PIXELS_PER_METER)
 #define WORLD_HEIGHT (HEIGHT/PIXELS_PER_METER)
 
-std::random_device rd;
-std::mt19937 e2(rd());
-std::uniform_real_distribution<> posDist(0,1);
-std::normal_distribution<> xVelDist(0,1);
-std::normal_distribution<> yVelDist(0,1);
+#define BALL_SIZE (10.0f / PIXELS_PER_METER)
+#define BALL_SPEED (BALL_SIZE * 15.0f)
+
+#define PADDLE_HEIGHT (3.0f / PIXELS_PER_METER)
+#define PADDLE_WIDTH (30.0f / PIXELS_PER_METER)
+#define PADDLE_Y (WORLD_HEIGHT - PADDLE_HEIGHT*3.0f)
+#define PADDLE_SPEED (PADDLE_WIDTH * 0.5f)
 
 b2Vec2 gravity(0.0f, 0.0f);
 b2World world(gravity);
 
-b2AABB worldBounds;
-
-// #define MAX_BODIES 1000
-static int circleCount = 5;
-
-// b2Body* bodies[MAX_BODIES] = { 0 };
-// static int numBodies = 0;
-
-static float r = 1;
+// b2AABB worldBounds;
 
 b2Body *addBody(float x, float y, float vx, float vy, b2BodyType type) {
   b2BodyDef bodyDef;
@@ -64,16 +58,17 @@ void addFixtureToBodyWithShape(b2Body *body, b2Shape *shape) {
   body->CreateFixture(&fixtureDef);
 }
 
-void addDynamicCircle(float x, float y, float vx, float vy, float rad) {
+b2Body *addDynamicCircle(float x, float y, float vx, float vy, float rad) {
   b2Body *body = addBody(x,y,vx,vy, b2_dynamicBody);
   // bodies[numBodies++] = body;
   b2CircleShape shape;
-  shape.m_radius = r;// * this->getScale();
+  shape.m_radius = rad;// * this->getScale();
   // this->createFixture(&shape);
   addFixtureToBodyWithShape(body, &shape);
+  return body;
 }
 
-void addStaticRect(float x, float y, float hx, float hy) {
+b2Body *addStaticRect(float x, float y, float hx, float hy) {
   b2Body *body = addBody(x,y,0,0,b2_staticBody);
   // bodies[numBodies++] = body;
   b2PolygonShape shape;
@@ -81,17 +76,53 @@ void addStaticRect(float x, float y, float hx, float hy) {
   // shape.m_radius = r;// * this->getScale();
   // this->createFixture(&shape);
   addFixtureToBodyWithShape(body, &shape);
+  return body;
 }
+
+b2Body *topWall;
 
 void makeBoundingBox(float width, float height) {
   addStaticRect(width/2,height+1,width/2,1);
-  addStaticRect(width/2,-1,width/2,1);
+  topWall = addStaticRect(width/2,-1,width/2,1);
   addStaticRect(width+1,height/2,1,height/2);
   addStaticRect(-1,height/2,1,height/2);
 }
 
-static std::chrono::time_point<std::chrono::system_clock> prevTime;
-static float deltaT;
+b2Vec2 randomBallVelocity(void) {
+  float angle = -((float) random() / (float) RAND_MAX) * M_PI;
+  return BALL_SPEED * *new b2Vec2(std::cos(angle),std::sin(angle));
+}
+
+enum GameState {
+  IDLE,
+  START,
+  RUNNING,
+};
+
+static b2Body *ball;
+static b2Body *paddle;
+static int score;
+static GameState state;
+// static b2Vec2 paddleMovement(PADDLE_SPEED,0);
+
+class BallScoredListener : public b2ContactListener {
+  void BeginContact(b2Contact* contact) {}
+
+  void EndContact(b2Contact* contact) {
+    b2Body *body1 = contact->GetFixtureA()->GetBody();
+    b2Body *body2 = contact->GetFixtureB()->GetBody();
+    if (!(body1 == paddle || body2 == paddle)) {
+      return;
+    }
+    if (!(body1 == ball || body2 == ball)) {
+      return;
+    }
+    score++;
+    graphics_printf("Score!! %d\n", score);
+  }
+};
+
+BallScoredListener ballScoredListener;
 
 void reset() {
   while (world.GetBodyCount() > 0) {
@@ -100,27 +131,26 @@ void reset() {
 
   makeBoundingBox(WORLD_WIDTH, WORLD_HEIGHT);
 
-  for (int i = 0; i < circleCount; i++) {
-    addDynamicCircle(
-      posDist(e2)*WORLD_WIDTH,
-      posDist(e2)*WORLD_HEIGHT,
-      // i*WORLD_WIDTH/circleCount*0.9 + 0.05*WORLD_WIDTH,
-      // 0.1*WORLD_HEIGHT,
-      xVelDist(e2),
-      yVelDist(e2),
-      r);
-  }
-  prevTime = std::chrono::system_clock::now();
+  ball = addDynamicCircle(
+    WORLD_WIDTH/2,
+    PADDLE_Y-PADDLE_HEIGHT/2-BALL_SIZE,
+    0,0,
+    BALL_SIZE);
+  paddle = addStaticRect(WORLD_WIDTH/2,PADDLE_Y, PADDLE_WIDTH/2, PADDLE_HEIGHT/2);
+  
+  // graphics_printf("Make paddle at <%.2f,%.2f> with halves <%.2f,%.2f>",WORLD_WIDTH/2,PADDLE_Y, PADDLE_WIDTH/2, PADDLE_HEIGHT/2);
 
+  state = IDLE;
+  score = 0;
 }
 
-bool handler(KeyPressEvent event) {
+bool onKeyDown(KeyPressEvent event) {
   char c = event.c;
-  if (event.specialKey)
-    graphics_printf("Got special key! %s", special_key_names[event.specialKey]);
-  else
-    graphics_printf("got %c|%d\n",c,c);
-  if (event.modified) graphics_printf("Modifiers: ctrl:%d|alt:%d|shift:%d",event.ctrl,event.alt,event.shift);
+  // if (event.specialKey)
+  //   graphics_printf("Got special key! %s", special_key_names[event.specialKey]);
+  // else
+  //   graphics_printf("got %c|%d\n",c,c);
+  // if (event.modified) graphics_printf("Modifiers: ctrl:%d|alt:%d|shift:%d",event.ctrl,event.alt,event.shift);
   if (c=='q') {
     graphics_printf("quit!\n");
     return true;
@@ -128,6 +158,22 @@ bool handler(KeyPressEvent event) {
   if (c == 'r') {
     graphics_printf("reset!\n");
     reset();
+    return false;
+  }
+  if (state == IDLE) {
+    if (c == ' ' && state == IDLE) {
+      graphics_printf("start!\n");
+      state = START;
+    }
+  } else if (state == RUNNING) {
+    if (event.specialKey == LEFT) {
+      float nexX = std::max(paddle->GetPosition().x - PADDLE_SPEED, 0.0f);
+      paddle->SetTransform(*new b2Vec2(nexX, PADDLE_Y), paddle->GetAngle());
+    }
+    if (event.specialKey == RIGHT) {
+      float nexX = std::min(paddle->GetPosition().x + PADDLE_SPEED, WORLD_WIDTH);
+      paddle->SetTransform(*new b2Vec2(nexX, PADDLE_Y), paddle->GetAngle());
+    }
   }
   return false;
 }
@@ -138,64 +184,77 @@ void setup(int argc, char *argv[]) {
     std::cout << argv[i] << '\t';
   }
   std::cout << std::endl;
-  if (argc > 1) {
-    circleCount = std::stoi(argv[1]);
-  }
-  if (argc > 2) {
-    r = std::stof(argv[2]) / PIXELS_PER_METER;
-  }
+  // if (argc > 1) {
+  //   circleCount = std::stoi(argv[1]);
+  // }
+  // if (argc > 2) {
+  //   r = std::stof(argv[2]) / PIXELS_PER_METER;
+  // }
 
 
-  onKeyPress(handler);
-  deltaT = DELTA_T_SEC;
+  registerKeyPressHandler(onKeyDown);
 
-  // display_size_based_on_console(5);
-  display_size(256,128);
+  display_size_based_on_console(5);
+  // display_size(256,128);
 
   frameRate(60);
   world.SetAllowSleeping(true);
   world.SetContinuousPhysics(true);
-  worldBounds = {.lowerBound = b2Vec2(0,0), .upperBound = b2Vec2(WORLD_WIDTH,WORLD_HEIGHT)};
+  world.SetContactListener(&ballScoredListener);
+  // worldBounds = {.lowerBound = b2Vec2(0,0), .upperBound = b2Vec2(WORLD_WIDTH,WORLD_HEIGHT)};
   reset();
 }
 
-class FixtureDrawer : public b2QueryCallback {
-  public:
-    bool ReportFixture(b2Fixture* fixture) {
-      if (fixture->GetShape()->GetType() != b2Shape::Type::e_circle) {
-        return true;
-      }
-      b2Vec2 pos = fixture->GetBody()->GetPosition();
-      float rad = fixture->GetShape()->m_radius;
-      circle(pos.x*PIXELS_PER_METER,pos.y*PIXELS_PER_METER, rad*PIXELS_PER_METER);
-      return true;
-    }
-};
+void drawCircleBody(b2Body *circleBody) {
+  b2Fixture *fixture = circleBody->GetFixtureList();
+  if (fixture->GetShape()->GetType() != b2Shape::Type::e_circle) {
+    graphics_printf("Trying to draw non circle body as circle!");
+    return;
+  }
+  b2Vec2 pos = circleBody->GetPosition();
+  float rad = fixture->GetShape()->m_radius;
+  circle(pos.x*PIXELS_PER_METER,pos.y*PIXELS_PER_METER, rad*PIXELS_PER_METER);
+}
 
-FixtureDrawer fixtureCallback;
+void drawRectBody(b2Body *rectBody) {
+  b2Fixture *fixture = rectBody->GetFixtureList();
+  if (fixture->GetShape()->GetType() != b2Shape::Type::e_polygon) {
+    graphics_printf("Trying to draw non polygon body as polygon!");
+    return;
+  }
+  b2Vec2 pos = rectBody->GetPosition();
+  static b2AABB bounds;
+  static b2Transform transform;
+  transform.SetIdentity();
+  fixture->GetShape()->ComputeAABB(&bounds, transform, 0);
+  b2Vec2 corner = pos + bounds.lowerBound;
+  b2Vec2 dims = 2 * bounds.GetExtents();
+  rect(corner.x*PIXELS_PER_METER, corner.y*PIXELS_PER_METER, dims.x*PIXELS_PER_METER, dims.y*PIXELS_PER_METER);
+}
+
+void startGame(void) {
+  ball->SetLinearVelocity(randomBallVelocity());
+  state = RUNNING;
+}
 
 void update() {
   clean();
 
-  auto currTime = std::chrono::system_clock::now();
-  // deltaT = (currTime - prevTime).count() / 1000000000.0;
-  prevTime = currTime;
-
   // std::cout << "delta t: " << deltaT << std::endl;
 
-  world.Step(deltaT, 8, 1);
+  if (state == START) {
+    startGame();
+  }
 
-  world.QueryAABB(&fixtureCallback, worldBounds);
+  world.Step(DELTA_T_SEC, 8, 1);
 
-  // for (b2Body *body = world.GetBodyList(), *end = body + world.GetBodyCount(); body < end; body++) {
-  //   b2Vec2 pos = body->GetPosition();
-  //   // if (body->GetFixtureList()->GetShape()->GetType() == b2Shape::Type::e_circle) {
-  //     // std::cout << "found circle" << std::endl;
-  //     // float rad = body->GetFixtureList()->GetShape()->m_radius;
-  //   circle(pos.x, pos.y, r);
-  //   // } else {
-  //   //   std::cout << "not a circle!" << std::endl;
-  //   // }
-  // }
+  // world.QueryAABB(&fixtureCallback, worldBounds);
+
+  drawCircleBody(ball);
+  drawRectBody(paddle);
+
 }
 
+void finish(void) {
+  graphics_printf("Game ended with %d points!!\n", score);
+}

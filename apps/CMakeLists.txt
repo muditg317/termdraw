@@ -13,4 +13,7 @@ target_link_libraries(pong PRIVATE termdraw_library fmt::fmt box2d::box2d)
 
 # add_custom_command( OUTPUT ${C-Ballz_SOURCE_DIR}/pong
 #                     COMMAND "mv $<TARGET_FILE:pong> ${C-Ballz_SOURCE_DIR}"
-#                     MAIN_DEPENDENCY pong)
+#                     DEPENDS pong)
+add_custom_command(TARGET pong
+                  POST_BUILD
+                  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:pong> ${C-Ballz_SOURCE_DIR})

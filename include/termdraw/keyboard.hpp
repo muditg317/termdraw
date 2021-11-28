@@ -52,7 +52,7 @@ typedef bool keyPressHandler(KeyPressEvent);
  * @brief register a key pres handler for the graphics session
  * should return boolean (true to terminate program, false otherwise)
  */
-void onKeyPress(keyPressHandler *);
+void registerKeyPressHandler(keyPressHandler *);
 
 void keyboard_preloop(void);
 void keyboard_loop(void);

@@ -49,7 +49,7 @@ PixelBuffer& getPixelBuffer();
 static_assert(HEIGHT_SCALE == WIDTH_SCALE * 2, "Height must be scaled exactly twice as much as width!!");
 
 /**
- * @brief setup for 
+ * @brief setup for graphics
  * 
  */
 void setup(int argc, char *argv[]);
@@ -75,7 +75,6 @@ void frameRate(double);
 
 void _graphics_print_string(std::string);
 
-
 inline void graphics_printf(const char *format, ...) {
   // ===== Option if buffer sizing becomes an issue
   // int size = snprintf(NULL, 0, "%d", 132);
@@ -100,6 +99,12 @@ void update(void);
  * @brief Zero out the pixel buffer
  */
 void clean(void);
+
+/**
+ * @brief application code for the end of the execution
+ * 
+ */
+void finish(void);
 
 void graphics_preloop(int argc, char *argv[]);
 void graphics_loop();

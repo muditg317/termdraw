@@ -229,8 +229,10 @@ void graphics_finish(int signum) {
 
   double ratio = ((float)timeMsComputed)/((float)timeMsComputing);
 
-  clean();
+  // clean();
   render();
+
+  finish();
 
   printf("\nRendering stats:\n\ttime computed:   \t|%9ld ms\n\ttime computing:   \t|%9ld ms\n\trendering ratio:\t|%9.3f\n", timeMsComputed, timeMsComputing, ratio);
 
