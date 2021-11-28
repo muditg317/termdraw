@@ -45,12 +45,6 @@ PixelBuffer& getPixelBuffer() {
 }
 
 void allocate_buffers(void) {
-  // pixelBuffer = (TermPix**) calloc(WIDTH, sizeof(TermPix*));
-  // assert(pixelBuffer != nullptr && "Failed to allocate pixel buffer for terminal drawing session!");
-  // for (int x = 0; x < WIDTH; x++) {
-  //   pixelBuffer[x] = (TermPix*) calloc(HEIGHT, sizeof(TermPix));
-  //   assert(pixelBuffer[x] != nullptr && "Failed to allocate pixel buffer for terminal drawing session!");
-  // }
   pixelBuffer = PixelBuffer(WIDTH,HEIGHT);
   pixelBufferAllocated = true;
 
@@ -139,17 +133,19 @@ inline void render(void) {
   for (int y = 0; y < CONSOLE_HEIGHT; ++y) {
     for (int x = 0; x < CONSOLE_WIDTH; ++x) {
       PixBuf<WIDTH_SCALE,HEIGHT_SCALE> pixelGroup = pixelBuffer.block<WIDTH_SCALE,HEIGHT_SCALE>(x*WIDTH_SCALE,y*HEIGHT_SCALE);
-      // TODO: validate pixel values
-      // std::cout << "Pixel chunk at <" << x*WIDTH_SCALE << ',' << y*HEIGHT_SCALE << ">!!:\n" << pixelGroup << "\n0:" << (pixelGroup.array() == 0).count() << "\n1:" << (pixelGroup.array() == 1).count() << std::endl;
-      // if (((pixelGroup.array() == 0).count() + (pixelGroup.array() == 1).count()) != WIDTH_SCALE*HEIGHT_SCALE) {
-      //   std::cout << "Bad pixel chunk at <" << x*WIDTH_SCALE << ',' << y*HEIGHT_SCALE << ">!!:\n" << pixelGroup << "\n0:" << (pixelGroup.array() == 0).count() << "\n1:" << (pixelGroup.array() == 1).count() << std::endl;
-      //   std::cout << "full pixels:\n" << pixelBuffer << std::endl;
-      // }
+      // validate pixel values
       assert((((pixelGroup.array() == 0).count() + (pixelGroup.array() == 1).count()) == WIDTH_SCALE*HEIGHT_SCALE) && "Matrix must have only 1s and 0s!");
 
       char offset1 = pixelsToBraille_offset1(pixelGroup);
       char offset2 = pixelsToBraille_offset2(pixelGroup);
 
+      // bool top = pixelGroup(0,0);
+      // bool bottom = pixelGroup(0,0);
+
+      // wchar_t choices[2][2] = {{' ','▄',},{'▀','█'}};
+      // char choices[2][2] = {{' ','o',},{'*','0'}};
+
+      // consoleBuffer[CONSOLE_LINE_SIZE*y + BYTES_PER_CONSOLE_CHAR*x+0] = choices[top][bottom];
       consoleBuffer[CONSOLE_LINE_SIZE*y + BYTES_PER_CONSOLE_CHAR*x+0] = baseBraille[0];
       consoleBuffer[CONSOLE_LINE_SIZE*y + BYTES_PER_CONSOLE_CHAR*x+1] = baseBraille[1] + offset1;
       consoleBuffer[CONSOLE_LINE_SIZE*y + BYTES_PER_CONSOLE_CHAR*x+2] = baseBraille[2] + offset2;
@@ -172,6 +168,50 @@ inline void resetCursor(void) {
   // getCursorPos(&lastCursorX,&lastCursorY);
 }
 
+
+std::function<preloopFunc> preloopFuncs[MAX_FUNCTION_REGISTRATIONS];
+int numPreloopFuncs = 0;
+void registerPreloop(preloopFunc func) {
+  assert(numPreloopFuncs < MAX_FUNCTION_REGISTRATIONS && "Too many preloop functions registered!");
+  preloopFuncs[numPreloopFuncs++] = func;
+}
+
+std::function<loopFunc> loopFuncs[MAX_FUNCTION_REGISTRATIONS];
+int numLoopFuncs = 0;
+void registerLoop(loopFunc func) {
+  assert(numLoopFuncs < MAX_FUNCTION_REGISTRATIONS && "Too many loop functions registered!");
+  loopFuncs[numLoopFuncs++] = func;
+}
+
+std::function<finishFunc> finishFuncs[MAX_FUNCTION_REGISTRATIONS];
+int numFinishFuncs = 0;
+void registerFinish(finishFunc func) {
+  assert(numFinishFuncs < MAX_FUNCTION_REGISTRATIONS && "Too many finish functions registered!");
+  finishFuncs[numFinishFuncs++] = func;
+}
+
+static void preloop(int argc, char *argv[]) {
+  // graphics_printf("run preloops: %d\n", numPreloopFuncs);
+  for (size_t i = 0; i < numPreloopFuncs; i++) {
+    // graphics_printf("run preloop %d\n", i);
+    preloopFuncs[i](argc, argv);
+  }
+}
+
+static void loop(void) {
+  for (size_t i = 0; i < numLoopFuncs; i++) {
+    loopFuncs[i]();
+  }
+}
+
+static void finish(int signum = 0) {
+  // clean();
+  render();
+  for (size_t i = 0; i < numFinishFuncs; i++) {
+    finishFuncs[i](signum);
+  }
+}
+
 static std::chrono::time_point<std::chrono::system_clock> start;
 
 static std::chrono::time_point<std::chrono::system_clock> t;
@@ -180,9 +220,18 @@ static std::chrono::microseconds microSecDelay;
 static uint32_t framesComputed = 0;
 
 void graphics_preloop(int argc, char *argv[]) {
-  
-  signal(SIGINT, graphics_finish);
-  signal(SIGTERM, graphics_finish);
+  // graphics_printf("run graphics preloop\n");
+  // signal(SIGINT, finish);
+  // signal(SIGTERM, finish);
+
+  struct sigaction signal_handler = {
+    .__sigaction_handler = finish,
+    .sa_flags = 0
+  };
+  sigemptyset (&signal_handler.sa_mask);
+
+  sigaction(SIGINT, &signal_handler, nullptr);
+  sigaction(SIGTERM, &signal_handler, nullptr);
 
   setup(argc, argv);
   assert(dims_set && "Must set dimensions for terminal drawing session! Call `display_size(width,height)`");
@@ -203,6 +252,8 @@ void graphics_preloop(int argc, char *argv[]) {
 }
 
 void graphics_loop() {
+  // graphics_printf("run graphics loop\n");
+
   // printf("call update!\n");
   update();
   // printf("call render!\n");
@@ -217,6 +268,7 @@ void graphics_loop() {
 }
 
 void graphics_finish(int signum) {
+  // graphics_printf("run graphics finish\n");
   // if (signum) {
   //   std::cout << "Interrupt signal (" << signum << ") received.\n";
   // }
@@ -229,11 +281,6 @@ void graphics_finish(int signum) {
 
   double ratio = ((float)timeMsComputed)/((float)timeMsComputing);
 
-  // clean();
-  render();
-
-  finish();
-
   printf("\nRendering stats:\n\ttime computed:   \t|%9ld ms\n\ttime computing:   \t|%9ld ms\n\trendering ratio:\t|%9.3f\n", timeMsComputed, timeMsComputing, ratio);
 
   if (signum) {
@@ -241,14 +288,20 @@ void graphics_finish(int signum) {
   }
 }
 
+bool quit_application = false;
 int graphics_main(int argc, char *argv[]) {
+  // graphics_printf("Run graphics main!\n");
 
-  graphics_preloop(argc, argv);
+  registerPreloop(graphics_preloop);
+  registerLoop(graphics_loop);
+  registerFinish(graphics_finish);
 
-  while (1) {
-    graphics_loop();
+  preloop(argc, argv);
+
+  while (!quit_application) {
+    loop();
   }
 
-  graphics_finish();
+  finish();
   return 0;
 }

@@ -109,17 +109,16 @@ void registerKeyPressHandler(keyPressHandler _handler) {
   handler = _handler;
 }
 
-static bool quit;
 static struct termios oldSettings, newSettings;
 
-void keyboard_preloop() {
+void keyboard_preloop(int argc, char *argv[]) {
   assert(handler != 0 && "Must set keypress handler if using keyboard main!");
 
   tcgetattr(STDIN_FILENO, &oldSettings );
   newSettings = oldSettings;
   newSettings.c_lflag &= (~ICANON & ~ECHO);
   tcsetattr(STDIN_FILENO, TCSANOW, &newSettings );
-  quit = false;
+  quit_application = false;
 }
 
 
@@ -135,7 +134,7 @@ void keyboard_loop(void) {
     int controlSeqStart = -1;
     int controlSeqEnd = -1;
 
-    for (int i = 0; i < n && !quit; i++) {
+    for (int i = 0; i < n && !quit_application; i++) {
       if (controlSeqStart != -1) {
         if (controlSeqStart == i-1 && buffer[i] != '[' && buffer[i] != 'O' && !std::islower(buffer[i])) {
           // just started
@@ -148,7 +147,7 @@ void keyboard_loop(void) {
         }
         if (controlSeqEnd != -1) {
           // graphics_printf("end control sequence! %d", controlSeqEnd);
-          quit = handler(KeyPressEvent(buffer + controlSeqStart, controlSeqEnd - controlSeqStart + 1));
+          quit_application = handler(KeyPressEvent(buffer + controlSeqStart, controlSeqEnd - controlSeqStart + 1));
           controlSeqStart = -1;
           controlSeqEnd = -1;
         }
@@ -156,12 +155,12 @@ void keyboard_loop(void) {
         controlSeqStart = i;
         // graphics_printf("start control sequence! %d", i);
       } else if (controlSeqStart == -1) {
-        quit = handler(KeyPressEvent(buffer[i]));
+        quit_application = handler(KeyPressEvent(buffer[i]));
       }
     }
     if (controlSeqStart != -1) {
       controlSeqEnd = n-1;
-      quit = handler(KeyPressEvent(buffer + controlSeqStart, controlSeqEnd - controlSeqStart + 1));
+      quit_application = handler(KeyPressEvent(buffer + controlSeqStart, controlSeqEnd - controlSeqStart + 1));
     }
   }
 }
@@ -172,18 +171,12 @@ void keyboard_finish(int signum) {
 }
 
 int keyboard_main(int argc, char *argv[]) {
-  signal(SIGINT, keyboard_finish);
-  signal(SIGTERM, keyboard_finish);
+  // graphics_printf("Run keyboard main\n");
+  registerPreloop(keyboard_preloop);
+  registerLoop(keyboard_loop);
+  registerFinish(keyboard_finish);
 
-  keyboard_preloop();
-  graphics_preloop(argc, argv);
-  
-  while (!quit) {
-    keyboard_loop();
-    graphics_loop();
-  }
+  graphics_main(argc,argv);
 
-  keyboard_finish();
-  graphics_finish();
   return 0;
 }

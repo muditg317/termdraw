@@ -8,11 +8,6 @@
 #include <Eigen/Eigen>
 #include <fmt/format.h>
 
-enum TermPix {
-  OFF = 0,
-  ON = 1,
-  TERM_PIX_N
-};
 
 #define PIX_BUF_MATRIX_T bool
 template<int T1, int T2>
@@ -100,15 +95,22 @@ void update(void);
  */
 void clean(void);
 
-/**
- * @brief application code for the end of the execution
- * 
- */
-void finish(void);
+extern bool quit_application;
 
-void graphics_preloop(int argc, char *argv[]);
-void graphics_loop();
-void graphics_finish(int signum  = 0);
+#define MAX_FUNCTION_REGISTRATIONS 5
+
+typedef void preloopFunc(int argc, char *argv[]);
+void registerPreloop(preloopFunc);
+
+typedef void loopFunc(void);
+void registerLoop(loopFunc);
+
+typedef void finishFunc(int signum);
+void registerFinish(finishFunc);
+
+preloopFunc graphics_preloop;
+loopFunc graphics_loop;
+finishFunc graphics_finish;
 
 int graphics_main(int argc, char *argv[]);
 
