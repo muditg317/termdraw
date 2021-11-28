@@ -18,11 +18,11 @@
 #define WORLD_WIDTH (WIDTH/PIXELS_PER_METER)
 #define WORLD_HEIGHT (HEIGHT/PIXELS_PER_METER)
 
-#define BALL_SIZE (10.0f / PIXELS_PER_METER)
+#define BALL_SIZE (6.0f / PIXELS_PER_METER)
 #define BALL_SPEED (BALL_SIZE * 15.0f)
 
 #define PADDLE_HEIGHT (3.0f / PIXELS_PER_METER)
-#define PADDLE_WIDTH (30.0f / PIXELS_PER_METER)
+#define PADDLE_WIDTH (20.0f / PIXELS_PER_METER)
 #define PADDLE_Y (WORLD_HEIGHT - PADDLE_HEIGHT*3.0f)
 #define PADDLE_SPEED (PADDLE_WIDTH * 0.5f)
 
@@ -79,11 +79,12 @@ b2Body *addStaticRect(float x, float y, float hx, float hy) {
   return body;
 }
 
-b2Body *topWall;
+b2Body *bottomWall;
 
 void makeBoundingBox(float width, float height) {
-  addStaticRect(width/2,height+1,width/2,1);
-  topWall = addStaticRect(width/2,-1,width/2,1);
+  bottomWall = addStaticRect(width/2,height+1,width/2,1);
+  // topWall
+  addStaticRect(width/2,-1,width/2,1);
   addStaticRect(width+1,height/2,1,height/2);
   addStaticRect(-1,height/2,1,height/2);
 }
@@ -97,6 +98,7 @@ enum GameState {
   IDLE,
   START,
   RUNNING,
+  OVER
 };
 
 static b2Body *ball;
@@ -105,24 +107,48 @@ static int score;
 static GameState state;
 // static b2Vec2 paddleMovement(PADDLE_SPEED,0);
 
-class BallScoredListener : public b2ContactListener {
+void endGame(void) {
+  ball->SetLinearVelocity(b2Vec2_zero);
+  state = OVER;
+  graphics_printf("Press 'r' to restart!");
+}
+
+void checkBallHit(b2Contact *contact) {
+  b2Body *body1 = contact->GetFixtureA()->GetBody();
+  b2Body *body2 = contact->GetFixtureB()->GetBody();
+  if (!(body1 == paddle || body2 == paddle)) {
+    return;
+  }
+  if (!(body1 == ball || body2 == ball)) {
+    return;
+  }
+  score++;
+  graphics_printf("Score!! %d\n", score);
+}
+
+void checkBallMissed(b2Contact* contact) {
+  b2Body *body1 = contact->GetFixtureA()->GetBody();
+  b2Body *body2 = contact->GetFixtureB()->GetBody();
+  if (!(body1 == bottomWall || body2 == bottomWall)) {
+    return;
+  }
+  if (!(body1 == ball || body2 == ball)) {
+    return;
+  }
+  graphics_printf("Game over!! Score: %d\n", score);
+  endGame();
+}
+
+class PongContactListener : public b2ContactListener {
   void BeginContact(b2Contact* contact) {}
 
   void EndContact(b2Contact* contact) {
-    b2Body *body1 = contact->GetFixtureA()->GetBody();
-    b2Body *body2 = contact->GetFixtureB()->GetBody();
-    if (!(body1 == paddle || body2 == paddle)) {
-      return;
-    }
-    if (!(body1 == ball || body2 == ball)) {
-      return;
-    }
-    score++;
-    graphics_printf("Score!! %d\n", score);
+    checkBallHit(contact);
+    checkBallMissed(contact);
   }
 };
 
-BallScoredListener ballScoredListener;
+PongContactListener pongContactListener;
 
 void reset() {
   while (world.GetBodyCount() > 0) {
@@ -141,7 +167,7 @@ void reset() {
   // graphics_printf("Make paddle at <%.2f,%.2f> with halves <%.2f,%.2f>",WORLD_WIDTH/2,PADDLE_Y, PADDLE_WIDTH/2, PADDLE_HEIGHT/2);
 
   state = IDLE;
-  score = 0;
+  score = -1;
 }
 
 bool onKeyDown(KeyPressEvent event) {
@@ -167,11 +193,11 @@ bool onKeyDown(KeyPressEvent event) {
     }
   } else if (state == RUNNING) {
     if (event.specialKey == LEFT) {
-      float nexX = std::max(paddle->GetPosition().x - PADDLE_SPEED, 0.0f);
+      float nexX = std::max(paddle->GetPosition().x - PADDLE_SPEED, PADDLE_WIDTH/2);
       paddle->SetTransform(*new b2Vec2(nexX, PADDLE_Y), paddle->GetAngle());
     }
     if (event.specialKey == RIGHT) {
-      float nexX = std::min(paddle->GetPosition().x + PADDLE_SPEED, WORLD_WIDTH);
+      float nexX = std::min(paddle->GetPosition().x + PADDLE_SPEED, WORLD_WIDTH - PADDLE_WIDTH/2);
       paddle->SetTransform(*new b2Vec2(nexX, PADDLE_Y), paddle->GetAngle());
     }
   }
@@ -200,7 +226,7 @@ void setup(int argc, char *argv[]) {
   frameRate(60);
   world.SetAllowSleeping(true);
   world.SetContinuousPhysics(true);
-  world.SetContactListener(&ballScoredListener);
+  world.SetContactListener(&pongContactListener);
   // worldBounds = {.lowerBound = b2Vec2(0,0), .upperBound = b2Vec2(WORLD_WIDTH,WORLD_HEIGHT)};
   reset();
 }
@@ -240,19 +266,14 @@ void startGame(void) {
 void update() {
   clean();
 
-  // std::cout << "delta t: " << deltaT << std::endl;
-
   if (state == START) {
     startGame();
+  } else if (state == RUNNING) {
+    world.Step(DELTA_T_SEC, 8, 1);
   }
-
-  world.Step(DELTA_T_SEC, 8, 1);
-
-  // world.QueryAABB(&fixtureCallback, worldBounds);
 
   drawCircleBody(ball);
   drawRectBody(paddle);
-
 }
 
 void finish(void) {
