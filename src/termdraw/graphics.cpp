@@ -102,7 +102,7 @@ std::vector<std::string> splitByDelimToCstr(std::string strToSplit, std::string 
 
 void _graphics_print_string(std::string result) {
   // std::cout << "internal printer -- ==========" << result << "=========" << std::endl;
-  std::string formatString = "%-" + std::to_string(getConsoleSize().ws_col) + "s\n";
+  std::string formatString = fmt::format("%-{}s\n", std::to_string(getConsoleSize().ws_col));
   // std::cout << "internal printer -- format: " << formatString << std::endl;
 
   std::vector<std::string> resLines = splitByDelimToCstr(result, "\n");
@@ -192,14 +192,14 @@ void registerFinish(finishFunc func) {
 
 static void preloop(int argc, char *argv[]) {
   // graphics_printf("run preloops: %d\n", numPreloopFuncs);
-  for (size_t i = 0; i < numPreloopFuncs; i++) {
+  for (int8_t i = numPreloopFuncs-1; i >= 0; --i) {
     // graphics_printf("run preloop %d\n", i);
     preloopFuncs[i](argc, argv);
   }
 }
 
 static void loop(void) {
-  for (size_t i = 0; i < numLoopFuncs; i++) {
+  for (int8_t i = numLoopFuncs-1; i >= 0; --i) {
     loopFuncs[i]();
   }
 }
@@ -207,7 +207,7 @@ static void loop(void) {
 static void finish(int signum = 0) {
   // clean();
   render();
-  for (size_t i = 0; i < numFinishFuncs; i++) {
+  for (int8_t i = numFinishFuncs-1; i >= 0; --i) {
     finishFuncs[i](signum);
   }
 }
@@ -228,7 +228,7 @@ void graphics_preloop(int argc, char *argv[]) {
     .__sigaction_handler = finish,
     .sa_flags = 0
   };
-  sigemptyset (&signal_handler.sa_mask);
+  sigemptyset(&signal_handler.sa_mask);
 
   sigaction(SIGINT, &signal_handler, nullptr);
   sigaction(SIGTERM, &signal_handler, nullptr);

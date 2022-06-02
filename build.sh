@@ -1,6 +1,10 @@
 set -e
 
-_cmake=/usr/bin/cmake
+_cmake=$(command -v cmake)
+if [ -z "$_cmake" ]; then
+    echo "cmake not found"
+    exit 1
+fi
 
 proj_dir=$(pwd)
 build_dir=$proj_dir/build

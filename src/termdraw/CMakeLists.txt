@@ -16,7 +16,7 @@ target_include_directories(termdraw_library PUBLIC ${C-Ballz_INCLUDE_DIR})
 find_package(Eigen3 CONFIG REQUIRED)
 message(STATUS "Eigen3::Eigen version: ${Eigen3_VERSION}")# Adds Eigen3::Eigen
 
-target_link_libraries(termdraw_library PRIVATE Eigen3::Eigen fmt::fmt)
+target_link_libraries(termdraw_library PUBLIC Eigen3::Eigen fmt::fmt)
 
 # All users of this library will need at least C++17
 target_compile_features(termdraw_library PUBLIC cxx_std_17)

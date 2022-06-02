@@ -4,7 +4,12 @@ build_type=RelWithDebInfo
 build_type=Debug
 build_type=Release
 
-_cmake=/usr/bin/cmake
+_cmake=$(command -v cmake)
+if [ -z "$_cmake" ]; then
+    echo "cmake not found"
+    exit 1
+fi
+
 _cc=/bin/clang
 cxx=/bin/clang++-10
 toolchain=/home/muditg317/application-installs/vcpkg/scripts/buildsystems/vcpkg.cmake
