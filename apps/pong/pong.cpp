@@ -148,7 +148,7 @@ class PongContactListener : public b2ContactListener {
   }
 };
 
-PongContactListener pongContactListener;
+PongContactListener snakeContactListener;
 
 void reset() {
   while (world.GetBodyCount() > 0) {
@@ -205,19 +205,6 @@ bool onKeyDown(KeyPressEvent event) {
 }
 
 void setup(int argc, char *argv[]) {
-  std::cout << argc << " args:\t";
-  for (int i = 0; i < argc; i++) {
-    std::cout << argv[i] << '\t';
-  }
-  std::cout << std::endl;
-  // if (argc > 1) {
-  //   circleCount = std::stoi(argv[1]);
-  // }
-  // if (argc > 2) {
-  //   r = std::stof(argv[2]) / PIXELS_PER_METER;
-  // }
-
-
   registerKeyPressHandler(onKeyDown);
 
   display_size_based_on_console(5);
@@ -226,7 +213,7 @@ void setup(int argc, char *argv[]) {
   frameRate(60);
   world.SetAllowSleeping(true);
   world.SetContinuousPhysics(true);
-  world.SetContactListener(&pongContactListener);
+  world.SetContactListener(&snakeContactListener);
   // worldBounds = {.lowerBound = b2Vec2(0,0), .upperBound = b2Vec2(WORLD_WIDTH,WORLD_HEIGHT)};
   reset();
 }
@@ -274,8 +261,4 @@ void update() {
 
   drawCircleBody(ball);
   drawRectBody(paddle);
-}
-
-void finish(void) {
-  graphics_printf("Game ended with %d points!!\n", score);
 }

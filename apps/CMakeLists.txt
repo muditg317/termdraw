@@ -1,16 +1,15 @@
 set (apps
   pong
-  snake
+  # snake
 )
-set (MAIN_APP pong)
+# set (MAIN_APP snake)
+list(GET apps -1 MAIN_APP)
+
 
 set (DEFAULT_APP_LIBRARIES termdraw_library)
 
-find_package(box2d REQUIRED)
-message(STATUS "box2d::box2d version: ${box2d_VERSION}")# Adds box2d::box2d
-
-set (pong_LIBRARIES termdraw_library fmt::fmt box2d::box2d)
-set (snake_LIBRARIES termdraw_library fmt::fmt box2d::box2d)
+set (pong_LIBRARIES termdraw_library fmt::fmt LibBox2dApp)
+set (snake_LIBRARIES termdraw_library fmt::fmt box2d::box2d LibBox2dApp)
 
 set (APPS_OUTPUT_DIR ${C-Ballz_SOURCE_DIR})
 if (NOT EXISTS ${APPS_OUTPUT_DIR})

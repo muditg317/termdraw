@@ -18,8 +18,8 @@
 #define WORLD_WIDTH (WIDTH/PIXELS_PER_METER)
 #define WORLD_HEIGHT (HEIGHT/PIXELS_PER_METER)
 
-#define BALL_SIZE (6.0f / PIXELS_PER_METER)
-#define BALL_SPEED (BALL_SIZE * 15.0f)
+#define SNAKE_SIZE (6.0f / PIXELS_PER_METER)
+#define SNAKE_SPEED (SNAKE_SIZE * 15.0f)
 
 #define PADDLE_HEIGHT (3.0f / PIXELS_PER_METER)
 #define PADDLE_WIDTH (20.0f / PIXELS_PER_METER)
@@ -79,19 +79,10 @@ b2Body *addStaticRect(float x, float y, float hx, float hy) {
   return body;
 }
 
-b2Body *bottomWall;
-
-void makeBoundingBox(float width, float height) {
-  bottomWall = addStaticRect(width/2,height+1,width/2,1);
-  // topWall
-  addStaticRect(width/2,-1,width/2,1);
-  addStaticRect(width+1,height/2,1,height/2);
-  addStaticRect(-1,height/2,1,height/2);
-}
 
 b2Vec2 randomBallVelocity(void) {
   float angle = -((float) random() / (float) RAND_MAX) * M_PI;
-  return BALL_SPEED * *new b2Vec2(std::cos(angle),std::sin(angle));
+  return SNAKE_SPEED * *new b2Vec2(std::cos(angle),std::sin(angle));
 }
 
 enum GameState {
@@ -148,7 +139,7 @@ class PongContactListener : public b2ContactListener {
   }
 };
 
-PongContactListener pongContactListener;
+PongContactListener snakeContactListener;
 
 void reset() {
   while (world.GetBodyCount() > 0) {
@@ -159,9 +150,9 @@ void reset() {
 
   ball = addDynamicCircle(
     WORLD_WIDTH/2,
-    PADDLE_Y-PADDLE_HEIGHT/2-BALL_SIZE,
+    PADDLE_Y-PADDLE_HEIGHT/2-SNAKE_SIZE,
     0,0,
-    BALL_SIZE);
+    SNAKE_SIZE);
   paddle = addStaticRect(WORLD_WIDTH/2,PADDLE_Y, PADDLE_WIDTH/2, PADDLE_HEIGHT/2);
   
   // graphics_printf("Make paddle at <%.2f,%.2f> with halves <%.2f,%.2f>",WORLD_WIDTH/2,PADDLE_Y, PADDLE_WIDTH/2, PADDLE_HEIGHT/2);
@@ -205,29 +196,14 @@ bool onKeyDown(KeyPressEvent event) {
 }
 
 void setup(int argc, char *argv[]) {
-  std::cout << argc << " args:\t";
-  for (int i = 0; i < argc; i++) {
-    std::cout << argv[i] << '\t';
-  }
-  std::cout << std::endl;
-  // if (argc > 1) {
-  //   circleCount = std::stoi(argv[1]);
-  // }
-  // if (argc > 2) {
-  //   r = std::stof(argv[2]) / PIXELS_PER_METER;
-  // }
-
-
   registerKeyPressHandler(onKeyDown);
 
   display_size_based_on_console(5);
-  // display_size(256,128);
 
   frameRate(60);
   world.SetAllowSleeping(true);
   world.SetContinuousPhysics(true);
-  world.SetContactListener(&pongContactListener);
-  // worldBounds = {.lowerBound = b2Vec2(0,0), .upperBound = b2Vec2(WORLD_WIDTH,WORLD_HEIGHT)};
+  world.SetContactListener(&snakeContactListener);
   reset();
 }
 
@@ -274,8 +250,4 @@ void update() {
 
   drawCircleBody(ball);
   drawRectBody(paddle);
-}
-
-void finish(void) {
-  graphics_printf("Game ended with %d points!!\n", score);
 }
