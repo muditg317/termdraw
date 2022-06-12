@@ -15,7 +15,7 @@ target_include_directories(LibBox2dApp PUBLIC ${C-Ballz_INCLUDE_DIR})
 find_package(box2d REQUIRED)
 message(STATUS "box2d::box2d version: ${box2d_VERSION}")# Adds box2d::box2d
 
-target_link_libraries(LibBox2dApp PUBLIC box2d::box2d)
+target_link_libraries(LibBox2dApp PUBLIC box2d::box2d termdraw_library)
 
 # All users of this library will need at least C++17
 target_compile_features(LibBox2dApp PUBLIC cxx_std_17)

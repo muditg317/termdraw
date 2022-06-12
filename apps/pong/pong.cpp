@@ -48,17 +48,17 @@ b2Body *addBody(float x, float y, float vx, float vy, b2BodyType type) {
   return world.CreateBody(&bodyDef);
 }
 
-void addFixtureToBodyWithShape(b2Body *body, b2Shape *shape) {
-  b2FixtureDef fixtureDef;
-  fixtureDef.shape = shape;
-  fixtureDef.density = 1.0f;
-  fixtureDef.friction = 0.0f;
-  fixtureDef.restitution = 1.0f;
-  fixtureDef.restitutionThreshold = 0;
-  fixtureDef.filter.categoryBits = 0x02;
-  fixtureDef.filter.maskBits = 0xffff;
-  body->CreateFixture(&fixtureDef);
-}
+// void addFixtureToBodyWithShape(b2Body *body, b2Shape *shape) {
+//   b2FixtureDef fixtureDef;
+//   fixtureDef.shape = shape;
+//   fixtureDef.density = 1.0f;
+//   fixtureDef.friction = 0.0f;
+//   fixtureDef.restitution = 1.0f;
+//   fixtureDef.restitutionThreshold = 0;
+//   fixtureDef.filter.categoryBits = 0x02;
+//   fixtureDef.filter.maskBits = 0xffff;
+//   body->CreateFixture(&fixtureDef);
+// }
 
 b2Body *addDynamicCircle(float x, float y, float vx, float vy, float rad) {
   b2Body *body = addBody(x,y,vx,vy, b2_dynamicBody);
@@ -81,8 +81,6 @@ b2Body *addStaticRect(float x, float y, float hx, float hy) {
   return body;
 }
 
-// b2Body *bottomWall;
-BoundingBox boundingBox;
 
 void makeBoundingBox(BoundingBox *out_boundingBox, float width, float height) {
   out_boundingBox->bottomWall = addStaticRect(width/2,height+1,width/2,1);
@@ -103,7 +101,7 @@ static b2Body *ball;
 static b2Body *paddle;
 static int score;
 static GameState state;
-// static b2Vec2 paddleMovement(PADDLE_SPEED,0);
+BoundingBox boundingBox;
 
 void endGame(void) {
   ball->SetLinearVelocity(b2Vec2_zero);
@@ -112,12 +110,7 @@ void endGame(void) {
 }
 
 void checkBallHit(b2Contact *contact) {
-  b2Body *body1 = contact->GetFixtureA()->GetBody();
-  b2Body *body2 = contact->GetFixtureB()->GetBody();
-  if (!(body1 == paddle || body2 == paddle)) {
-    return;
-  }
-  if (!(body1 == ball || body2 == ball)) {
+  if (!isContactBetween(contact, paddle, ball)) {
     return;
   }
   score++;
@@ -125,12 +118,7 @@ void checkBallHit(b2Contact *contact) {
 }
 
 void checkBallMissed(b2Contact* contact) {
-  b2Body *body1 = contact->GetFixtureA()->GetBody();
-  b2Body *body2 = contact->GetFixtureB()->GetBody();
-  if (!(body1 == boundingBox.bottomWall || body2 == boundingBox.bottomWall)) {
-    return;
-  }
-  if (!(body1 == ball || body2 == ball)) {
+  if (!isContactBetween(contact, boundingBox.bottomWall, ball)) {
     return;
   }
   graphics_printf("Game over!! Score: %d\n", score);
@@ -146,7 +134,7 @@ class PongContactListener : public b2ContactListener {
   }
 };
 
-PongContactListener snakeContactListener;
+PongContactListener pongContactListener;
 
 void reset() {
   while (world.GetBodyCount() > 0) {
@@ -211,36 +199,9 @@ void setup(int argc, char *argv[]) {
   frameRate(60);
   world.SetAllowSleeping(true);
   world.SetContinuousPhysics(true);
-  world.SetContactListener(&snakeContactListener);
+  world.SetContactListener(&pongContactListener);
   // worldBounds = {.lowerBound = b2Vec2(0,0), .upperBound = b2Vec2(WORLD_WIDTH,WORLD_HEIGHT)};
   reset();
-}
-
-void drawCircleBody(b2Body *circleBody) {
-  b2Fixture *fixture = circleBody->GetFixtureList();
-  if (fixture->GetShape()->GetType() != b2Shape::Type::e_circle) {
-    graphics_printf("Trying to draw non circle body as circle!");
-    return;
-  }
-  b2Vec2 pos = circleBody->GetPosition();
-  float rad = fixture->GetShape()->m_radius;
-  circle(pos.x*PIXELS_PER_METER,pos.y*PIXELS_PER_METER, rad*PIXELS_PER_METER);
-}
-
-void drawRectBody(b2Body *rectBody) {
-  b2Fixture *fixture = rectBody->GetFixtureList();
-  if (fixture->GetShape()->GetType() != b2Shape::Type::e_polygon) {
-    graphics_printf("Trying to draw non polygon body as polygon!");
-    return;
-  }
-  b2Vec2 pos = rectBody->GetPosition();
-  static b2AABB bounds;
-  static b2Transform transform;
-  transform.SetIdentity();
-  fixture->GetShape()->ComputeAABB(&bounds, transform, 0);
-  b2Vec2 corner = pos + bounds.lowerBound;
-  b2Vec2 dims = 2 * bounds.GetExtents();
-  rect(corner.x*PIXELS_PER_METER, corner.y*PIXELS_PER_METER, dims.x*PIXELS_PER_METER, dims.y*PIXELS_PER_METER);
 }
 
 void startGame(void) {

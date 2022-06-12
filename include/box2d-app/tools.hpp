@@ -37,4 +37,10 @@ inline b2Vec2 randomVelocity(int speed = 1) {
   return speed * *new b2Vec2(std::cos(angle),std::sin(angle));
 }
 
+bool isContactBetween(b2Contact *contact, b2Body *body1, b2Body *body2);
+
+void drawCircleBody(b2Body *circleBody);
+
+void drawRectBody(b2Body *rectBody);
+
 #endif
