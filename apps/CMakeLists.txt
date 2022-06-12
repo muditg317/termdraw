@@ -1,15 +1,12 @@
 set (apps
   pong
-  # snake
 )
-# set (MAIN_APP snake)
 list(GET apps -1 MAIN_APP)
 
 
 set (DEFAULT_APP_LIBRARIES termdraw_library)
 
 set (pong_LIBRARIES termdraw_library fmt::fmt LibBox2dApp)
-set (snake_LIBRARIES termdraw_library fmt::fmt box2d::box2d LibBox2dApp)
 
 set (APPS_OUTPUT_DIR ${C-Ballz_SOURCE_DIR})
 if (NOT EXISTS ${APPS_OUTPUT_DIR})

@@ -3,6 +3,8 @@
 #include <termdraw/keyboard.hpp>
 #include <termdraw/shapes.hpp>
 
+#include <box2d-app/tools.hpp>
+
 // #include <fmt/format.h>
 #include <iostream>
 #include <vector>
@@ -79,19 +81,15 @@ b2Body *addStaticRect(float x, float y, float hx, float hy) {
   return body;
 }
 
-b2Body *bottomWall;
+// b2Body *bottomWall;
+BoundingBox boundingBox;
 
-void makeBoundingBox(float width, float height) {
-  bottomWall = addStaticRect(width/2,height+1,width/2,1);
+void makeBoundingBox(BoundingBox *out_boundingBox, float width, float height) {
+  out_boundingBox->bottomWall = addStaticRect(width/2,height+1,width/2,1);
   // topWall
-  addStaticRect(width/2,-1,width/2,1);
-  addStaticRect(width+1,height/2,1,height/2);
-  addStaticRect(-1,height/2,1,height/2);
-}
-
-b2Vec2 randomBallVelocity(void) {
-  float angle = -((float) random() / (float) RAND_MAX) * M_PI;
-  return BALL_SPEED * *new b2Vec2(std::cos(angle),std::sin(angle));
+  out_boundingBox->topWall = addStaticRect(width/2,-1,width/2,1);
+  out_boundingBox->rightWall = addStaticRect(width+1,height/2,1,height/2);
+  out_boundingBox->leftWall = addStaticRect(-1,height/2,1,height/2);
 }
 
 enum GameState {
@@ -129,7 +127,7 @@ void checkBallHit(b2Contact *contact) {
 void checkBallMissed(b2Contact* contact) {
   b2Body *body1 = contact->GetFixtureA()->GetBody();
   b2Body *body2 = contact->GetFixtureB()->GetBody();
-  if (!(body1 == bottomWall || body2 == bottomWall)) {
+  if (!(body1 == boundingBox.bottomWall || body2 == boundingBox.bottomWall)) {
     return;
   }
   if (!(body1 == ball || body2 == ball)) {
@@ -155,7 +153,7 @@ void reset() {
     world.DestroyBody(world.GetBodyList());
   }
 
-  makeBoundingBox(WORLD_WIDTH, WORLD_HEIGHT);
+  makeBoundingBox(&boundingBox, WORLD_WIDTH, WORLD_HEIGHT);
 
   ball = addDynamicCircle(
     WORLD_WIDTH/2,
@@ -246,7 +244,7 @@ void drawRectBody(b2Body *rectBody) {
 }
 
 void startGame(void) {
-  ball->SetLinearVelocity(randomBallVelocity());
+  ball->SetLinearVelocity(randomVelocity(BALL_SPEED));
   state = RUNNING;
 }
 
