@@ -33,41 +33,41 @@ b2World world(gravity);
 
 // b2AABB worldBounds;
 
-b2Body *addBody(float x, float y, float vx, float vy, b2BodyType type) {
-  b2BodyDef bodyDef;
-  bodyDef.type = type;
-  bodyDef.position.Set(
-      x,y
-  );
-  bodyDef.linearVelocity.Set(
-    vx,vy
-  );
-  // std::cout << "add body at " << x << std::endl;
-  // bodyDef.userData = this;
-  bodyDef.fixedRotation = true;
-  return world.CreateBody(&bodyDef);
-}
+// b2Body *addBody(float x, float y, float vx, float vy, b2BodyType type) {
+//   b2BodyDef bodyDef;
+//   bodyDef.type = type;
+//   bodyDef.position.Set(
+//       x,y
+//   );
+//   bodyDef.linearVelocity.Set(
+//     vx,vy
+//   );
+//   // std::cout << "add body at " << x << std::endl;
+//   // bodyDef.userData = this;
+//   bodyDef.fixedRotation = true;
+//   return world.CreateBody(&bodyDef);
+// }
 
-b2Body *addDynamicCircle(float x, float y, float vx, float vy, float rad) {
-  b2Body *body = addBody(x,y,vx,vy, b2_dynamicBody);
-  // bodies[numBodies++] = body;
-  b2CircleShape shape;
-  shape.m_radius = rad;// * this->getScale();
-  // this->createFixture(&shape);
-  addFixtureToBodyWithShape(body, &shape);
-  return body;
-}
+// b2Body *addDynamicCircle(float x, float y, float vx, float vy, float rad) {
+//   b2Body *body = addBody(x,y,vx,vy, b2_dynamicBody);
+//   // bodies[numBodies++] = body;
+//   b2CircleShape shape;
+//   shape.m_radius = rad;// * this->getScale();
+//   // this->createFixture(&shape);
+//   addFixtureToBodyWithShape(body, &shape);
+//   return body;
+// }
 
-b2Body *addStaticRect(float x, float y, float hx, float hy) {
-  b2Body *body = addBody(x,y,0,0,b2_staticBody);
-  // bodies[numBodies++] = body;
-  b2PolygonShape shape;
-  shape.SetAsBox(hx,hy);
-  // shape.m_radius = r;// * this->getScale();
-  // this->createFixture(&shape);
-  addFixtureToBodyWithShape(body, &shape);
-  return body;
-}
+// b2Body *addStaticRect(float x, float y, float hx, float hy) {
+//   b2Body *body = addBody(x,y,0,0,b2_staticBody);
+//   // bodies[numBodies++] = body;
+//   b2PolygonShape shape;
+//   shape.SetAsBox(hx,hy);
+//   // shape.m_radius = r;// * this->getScale();
+//   // this->createFixture(&shape);
+//   addFixtureToBodyWithShape(body, &shape);
+//   return body;
+// }
 
 
 // void makeBoundingBox(BoundingBox *out_boundingBox, float width, float height) {
@@ -130,12 +130,12 @@ void reset() {
 
   makeBoundingBox(&boundingBox, world, WORLD_WIDTH, WORLD_HEIGHT);
 
-  ball = addDynamicCircle(
+  ball = addDynamicCircle(world,
     WORLD_WIDTH/2,
     PADDLE_Y-PADDLE_HEIGHT/2-BALL_SIZE,
     0,0,
     BALL_SIZE);
-  paddle = addStaticRect(WORLD_WIDTH/2,PADDLE_Y, PADDLE_WIDTH/2, PADDLE_HEIGHT/2);
+  paddle = addStaticRect(world,WORLD_WIDTH/2,PADDLE_Y, PADDLE_WIDTH/2, PADDLE_HEIGHT/2);
   
   // graphics_printf("Make paddle at <%.2f,%.2f> with halves <%.2f,%.2f>",WORLD_WIDTH/2,PADDLE_Y, PADDLE_WIDTH/2, PADDLE_HEIGHT/2);
 

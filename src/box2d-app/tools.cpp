@@ -27,10 +27,6 @@ void addFixtureToBodyWithShape(b2Body *body, b2Shape *shape) {
   fixtureDef.restitutionThreshold = 0;
   fixtureDef.filter.categoryBits = 0x02;
   fixtureDef.filter.maskBits = 0xffff;
-  std::cout << "body.bodytype: " << body->GetType() << std::endl;
-  std::cout << "static: " << b2_staticBody << std::endl;
-  std::cout << "kinematic: " << b2_kinematicBody << std::endl;
-  std::cout << "dynamic: " << b2_dynamicBody << std::endl;
   body->CreateFixture(&fixtureDef);
 }
 
