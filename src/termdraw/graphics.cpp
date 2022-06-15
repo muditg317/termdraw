@@ -19,49 +19,51 @@
 #include <Eigen/Eigen>
 // #include <boost/algorithm/string/join.hpp>
 
-static double _frameRate = DEFAULT_FRAME_RATE;
-double getFrameRate() {
+static bool appCreated = false;
+GraphicsApplication::GraphicsApplication()
+    : _frameRate(DEFAULT_FRAME_RATE),
+      pixelBufferAllocated(false),
+      dimsSet(false) {
+  if (appCreated) {
+    throw std::runtime_error("GraphicsApplication already exists!");
+  }
+  appCreated = true;
+}
+
+double GraphicsApplication::getFrameRate(void) {
   return _frameRate;
 }
 
-static int _width;
-int getWidth() {
+int GraphicsApplication::getWidth(void) {
   return _width;
 }
 
-static int _height;
-int getHeight() {
+int GraphicsApplication::getHeight(void) {
   return _height;
 }
 
-static PixelBuffer pixelBuffer;
-static char *consoleBuffer;
-
-static bool pixelBufferAllocated = false;
-PixelBuffer& getPixelBuffer() {
-  assert(pixelBufferAllocated && "Must allocate buffer before reading or writing!");
+PixelBuffer& GraphicsApplication::getPixelBuffer(void) {
+  assert(this->pixelBufferAllocated && "Must allocate buffer before reading or writing!");
   // printf("accessed buffer!\n");
   return pixelBuffer;
 }
 
-void allocate_buffers(void) {
-  pixelBuffer = PixelBuffer(WIDTH,HEIGHT);
-  pixelBufferAllocated = true;
+void GraphicsApplication::allocate_buffers(void) {
+  this->pixelBuffer = PixelBuffer(WIDTH,HEIGHT);
+  this->pixelBufferAllocated = true;
 
-  consoleBuffer = (char *) calloc(CONSOLE_HEIGHT, sizeof(char) * CONSOLE_LINE_SIZE);
-  assert(consoleBuffer != nullptr && "Failed to allocate console buffer for terminal drawing session!");
+  this->consoleBuffer = (char *) calloc(CONSOLE_HEIGHT, sizeof(char) * CONSOLE_LINE_SIZE);
+  assert(this->consoleBuffer != nullptr && "Failed to allocate console buffer for terminal drawing session!");
 }
 
-static bool dims_set = false;
-void display_size(int width, int height) {
-  assert(!dims_set && "Display cannot be set twice!");
-  _width = width;
-  _height = height;
-  dims_set = true;
+void GraphicsApplication::display_size(int width, int height) {
+  assert(!this->dimsSet && "Display cannot be set twice!");
+  this->_width = width;
+  this->_height = height;
+  this->dimsSet = true;
 
-  allocate_buffers();
+  this->allocate_buffers();
 }
-
 
 inline struct winsize &getConsoleSize() {
   static struct winsize w;
@@ -72,12 +74,12 @@ inline struct winsize &getConsoleSize() {
   }
   return w;
 }
-void display_size_based_on_console(int rowsToSave) {
+void GraphicsApplication::display_size_based_on_console(int rowsToSave) {
   struct winsize w = getConsoleSize();
-  display_size(w.ws_col * WIDTH_SCALE, (w.ws_row - rowsToSave - 1) * HEIGHT_SCALE);
+  this->display_size(w.ws_col * WIDTH_SCALE, (w.ws_row - rowsToSave - 1) * HEIGHT_SCALE);
 }
 
-void frameRate(double fr) {
+void GraphicsApplication::frameRate(double fr) {
   assert(fr > 0 && "Cannot use non-positive framerate!");
   _frameRate = fr;
   if (fr > MAX_FR_RECOMMENDATION) {
@@ -128,7 +130,7 @@ inline char pixelsToBraille_offset1(PixBuf<WIDTH_SCALE,HEIGHT_SCALE> pixelGroup)
 inline char pixelsToBraille_offset2(PixBuf<WIDTH_SCALE,HEIGHT_SCALE> pixelGroup) {
   return pixelGroup(0,0) + (pixelGroup(0,1) << 1) + (pixelGroup(0,2) << 2) + (pixelGroup(1,0) << 3) + (pixelGroup(1,1) << 4) + (pixelGroup(1,2) << 5);
 }
-inline void render(void) {
+inline void GraphicsApplication::render(void) {
   static char baseBraille[] = "\u2800";
   for (int y = 0; y < CONSOLE_HEIGHT; ++y) {
     for (int x = 0; x < CONSOLE_WIDTH; ++x) {
@@ -155,7 +157,7 @@ inline void render(void) {
   fwrite(consoleBuffer, CONSOLE_LINE_SIZE, CONSOLE_HEIGHT, stdout);
 }
 
-void clean(void) {
+void GraphicsApplication::clean(void) {
   pixelBuffer.setZero();
 }
 /**
@@ -206,7 +208,7 @@ static void loop(void) {
 
 static void finish(int signum = 0) {
   // clean();
-  render();
+  app->render();
   for (int8_t i = numFinishFuncs-1; i >= 0; --i) {
     finishFuncs[i](signum);
   }
@@ -233,8 +235,8 @@ void graphics_preloop(int argc, char *argv[]) {
   sigaction(SIGINT, &signal_handler, nullptr);
   sigaction(SIGTERM, &signal_handler, nullptr);
 
-  setup(argc, argv);
-  assert(dims_set && "Must set dimensions for terminal drawing session! Call `display_size(width,height)`");
+  app->setup(argc, argv);
+  // assert(app->dimsSet && "Must set dimensions for terminal drawing session! Call `display_size(width,height)`");
   
   printf("Finished termdraw setup!\n\tScreen:    \t%-3dx%3d\n\tConsole:\t%-3dx%3d\n\tFrame Rate:\t%.2f\n", WIDTH, HEIGHT, CONSOLE_WIDTH, CONSOLE_HEIGHT, FRAME_RATE);
 
@@ -247,7 +249,7 @@ void graphics_preloop(int argc, char *argv[]) {
   
   start = t = std::chrono::system_clock::now();
 
-  render();
+  app->render();
   resetCursor();
 }
 
@@ -255,9 +257,9 @@ void graphics_loop() {
   // graphics_printf("run graphics loop\n");
 
   // printf("call update!\n");
-  update();
+  app->update();
   // printf("call render!\n");
-  render();
+  app->render();
   // printf("call reset!\n");
   resetCursor();
 
@@ -287,6 +289,7 @@ void graphics_finish(int signum) {
     exit(signum);
   }
 }
+
 
 bool quit_application = false;
 int graphics_main(int argc, char *argv[]) {

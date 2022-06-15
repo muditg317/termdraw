@@ -125,7 +125,7 @@ bool onKeyDown(KeyPressEvent event) {
   return false;
 }
 
-void setup(int argc, char *argv[]) {
+void GraphicsApplication::setup(int argc, char *argv[]) {
   registerKeyPressHandler(onKeyDown);
 
   display_size_based_on_console(5);
@@ -143,7 +143,7 @@ void startGame(void) {
   state = RUNNING;
 }
 
-void update() {
+void GraphicsApplication::update() {
   clean();
 
   if (state == START) {

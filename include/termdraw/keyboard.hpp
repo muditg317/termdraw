@@ -61,7 +61,9 @@ void keyboard_finish(int signum=0);
 int keyboard_main(int argc, char *argv[]);
 
 #ifdef KEYBOARD_MAIN
+GraphicsApplication *app;
 int main(int argc, char *argv[]) {
+  app = new GraphicsApplication();
   keyboard_main(argc, argv);
 }
 #endif
