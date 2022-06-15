@@ -16,15 +16,15 @@ struct BoundingBox {
   b2Body *rightWall;
 };
 
-b2Body *addBody(b2World world, float x, float y, float vx, float vy, b2BodyType type);
+b2Body *addBody(b2World &world, float x, float y, float vx, float vy, b2BodyType type);
 
 void addFixtureToBodyWithShape(b2Body *body, b2Shape *shape);
 
-b2Body *addDynamicCircle(b2World world, float x, float y, float vx, float vy, float rad);
+b2Body *addDynamicCircle(b2World &world, float x, float y, float vx, float vy, float rad);
 
-b2Body *addStaticRect(b2World world, float x, float y, float hx, float hy);
+b2Body *addStaticRect(b2World &world, float x, float y, float hx, float hy);
 
-BoundingBox makeBoundingBox(b2World world, float width, float height);
+void makeBoundingBox(BoundingBox *out_boundingBox, b2World &world, float width, float height);
 
 /**
  * @brief creates a 2d vector with random angle and input speed

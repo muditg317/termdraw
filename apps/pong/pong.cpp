@@ -48,18 +48,6 @@ b2Body *addBody(float x, float y, float vx, float vy, b2BodyType type) {
   return world.CreateBody(&bodyDef);
 }
 
-// void addFixtureToBodyWithShape(b2Body *body, b2Shape *shape) {
-//   b2FixtureDef fixtureDef;
-//   fixtureDef.shape = shape;
-//   fixtureDef.density = 1.0f;
-//   fixtureDef.friction = 0.0f;
-//   fixtureDef.restitution = 1.0f;
-//   fixtureDef.restitutionThreshold = 0;
-//   fixtureDef.filter.categoryBits = 0x02;
-//   fixtureDef.filter.maskBits = 0xffff;
-//   body->CreateFixture(&fixtureDef);
-// }
-
 b2Body *addDynamicCircle(float x, float y, float vx, float vy, float rad) {
   b2Body *body = addBody(x,y,vx,vy, b2_dynamicBody);
   // bodies[numBodies++] = body;
@@ -82,13 +70,12 @@ b2Body *addStaticRect(float x, float y, float hx, float hy) {
 }
 
 
-void makeBoundingBox(BoundingBox *out_boundingBox, float width, float height) {
-  out_boundingBox->bottomWall = addStaticRect(width/2,height+1,width/2,1);
-  // topWall
-  out_boundingBox->topWall = addStaticRect(width/2,-1,width/2,1);
-  out_boundingBox->rightWall = addStaticRect(width+1,height/2,1,height/2);
-  out_boundingBox->leftWall = addStaticRect(-1,height/2,1,height/2);
-}
+// void makeBoundingBox(BoundingBox *out_boundingBox, float width, float height) {
+//   out_boundingBox->bottomWall = addStaticRect(width/2,height+1,width/2,1);
+//   out_boundingBox->topWall = addStaticRect(width/2,-1,width/2,1);
+//   out_boundingBox->rightWall = addStaticRect(width+1,height/2,1,height/2);
+//   out_boundingBox->leftWall = addStaticRect(-1,height/2,1,height/2);
+// }
 
 enum GameState {
   IDLE,
@@ -141,7 +128,7 @@ void reset() {
     world.DestroyBody(world.GetBodyList());
   }
 
-  makeBoundingBox(&boundingBox, WORLD_WIDTH, WORLD_HEIGHT);
+  makeBoundingBox(&boundingBox, world, WORLD_WIDTH, WORLD_HEIGHT);
 
   ball = addDynamicCircle(
     WORLD_WIDTH/2,
@@ -179,12 +166,12 @@ bool onKeyDown(KeyPressEvent event) {
     }
   } else if (state == RUNNING) {
     if (event.specialKey == LEFT) {
-      float nexX = std::max(paddle->GetPosition().x - PADDLE_SPEED, PADDLE_WIDTH/2);
-      paddle->SetTransform(*new b2Vec2(nexX, PADDLE_Y), paddle->GetAngle());
+      float newX = std::max(paddle->GetPosition().x - PADDLE_SPEED, PADDLE_WIDTH/2);
+      paddle->SetTransform(*new b2Vec2(newX, PADDLE_Y), paddle->GetAngle());
     }
     if (event.specialKey == RIGHT) {
-      float nexX = std::min(paddle->GetPosition().x + PADDLE_SPEED, WORLD_WIDTH - PADDLE_WIDTH/2);
-      paddle->SetTransform(*new b2Vec2(nexX, PADDLE_Y), paddle->GetAngle());
+      float newX = std::min(paddle->GetPosition().x + PADDLE_SPEED, WORLD_WIDTH - PADDLE_WIDTH/2);
+      paddle->SetTransform(*new b2Vec2(newX, PADDLE_Y), paddle->GetAngle());
     }
   }
   return false;

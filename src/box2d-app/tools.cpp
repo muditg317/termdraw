@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-b2Body *addBody(b2World world, float x, float y, float vx, float vy, b2BodyType type) {
+b2Body *addBody(b2World &world, float x, float y, float vx, float vy, b2BodyType type) {
   b2BodyDef bodyDef;
   bodyDef.type = type;
   bodyDef.position.Set(
@@ -34,7 +34,7 @@ void addFixtureToBodyWithShape(b2Body *body, b2Shape *shape) {
   body->CreateFixture(&fixtureDef);
 }
 
-b2Body *addDynamicCircle(b2World world, float x, float y, float vx, float vy, float rad) {
+b2Body *addDynamicCircle(b2World &world, float x, float y, float vx, float vy, float rad) {
   b2Body *body = addBody(world, x,y,vx,vy, b2_dynamicBody);
   // bodies[numBodies++] = body;
   b2CircleShape shape;
@@ -44,7 +44,7 @@ b2Body *addDynamicCircle(b2World world, float x, float y, float vx, float vy, fl
   return body;
 }
 
-b2Body *addStaticRect(b2World world, float x, float y, float hx, float hy) {
+b2Body *addStaticRect(b2World &world, float x, float y, float hx, float hy) {
   b2Body *body = addBody(world, x,y,0,0,b2_staticBody);
   // bodies[numBodies++] = body;
   b2PolygonShape shape;
@@ -55,13 +55,11 @@ b2Body *addStaticRect(b2World world, float x, float y, float hx, float hy) {
   return body;
 }
 
-BoundingBox makeBoundingBox(b2World world, float width, float height) {
-  BoundingBox box;
-  box.bottomWall = addStaticRect(world, width/2,height+1,width/2,1);
-  box.topWall = addStaticRect(world, width/2,-1,width/2,1);
-  box.rightWall = addStaticRect(world, width+1,height/2,1,height/2);
-  box.leftWall = addStaticRect(world, -1,height/2,1,height/2);
-  return box;
+void makeBoundingBox(BoundingBox *out_boundingBox, b2World &world, float width, float height) {
+  out_boundingBox->bottomWall = addStaticRect(world, width/2,height+1,width/2,1);
+  out_boundingBox->topWall = addStaticRect(world, width/2,-1,width/2,1);
+  out_boundingBox->rightWall = addStaticRect(world, width+1,height/2,1,height/2);
+  out_boundingBox->leftWall = addStaticRect(world, -1,height/2,1,height/2);
 }
 
 bool isContactBetween(b2Contact *contact, b2Body *body1, b2Body *body2) {
