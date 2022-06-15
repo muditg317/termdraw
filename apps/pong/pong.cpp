@@ -31,52 +31,6 @@
 b2Vec2 gravity(0.0f, 0.0f);
 b2World world(gravity);
 
-// b2AABB worldBounds;
-
-// b2Body *addBody(float x, float y, float vx, float vy, b2BodyType type) {
-//   b2BodyDef bodyDef;
-//   bodyDef.type = type;
-//   bodyDef.position.Set(
-//       x,y
-//   );
-//   bodyDef.linearVelocity.Set(
-//     vx,vy
-//   );
-//   // std::cout << "add body at " << x << std::endl;
-//   // bodyDef.userData = this;
-//   bodyDef.fixedRotation = true;
-//   return world.CreateBody(&bodyDef);
-// }
-
-// b2Body *addDynamicCircle(float x, float y, float vx, float vy, float rad) {
-//   b2Body *body = addBody(x,y,vx,vy, b2_dynamicBody);
-//   // bodies[numBodies++] = body;
-//   b2CircleShape shape;
-//   shape.m_radius = rad;// * this->getScale();
-//   // this->createFixture(&shape);
-//   addFixtureToBodyWithShape(body, &shape);
-//   return body;
-// }
-
-// b2Body *addStaticRect(float x, float y, float hx, float hy) {
-//   b2Body *body = addBody(x,y,0,0,b2_staticBody);
-//   // bodies[numBodies++] = body;
-//   b2PolygonShape shape;
-//   shape.SetAsBox(hx,hy);
-//   // shape.m_radius = r;// * this->getScale();
-//   // this->createFixture(&shape);
-//   addFixtureToBodyWithShape(body, &shape);
-//   return body;
-// }
-
-
-// void makeBoundingBox(BoundingBox *out_boundingBox, float width, float height) {
-//   out_boundingBox->bottomWall = addStaticRect(width/2,height+1,width/2,1);
-//   out_boundingBox->topWall = addStaticRect(width/2,-1,width/2,1);
-//   out_boundingBox->rightWall = addStaticRect(width+1,height/2,1,height/2);
-//   out_boundingBox->leftWall = addStaticRect(-1,height/2,1,height/2);
-// }
-
 enum GameState {
   IDLE,
   START,
@@ -137,7 +91,6 @@ void reset() {
     BALL_SIZE);
   paddle = addStaticRect(world,WORLD_WIDTH/2,PADDLE_Y, PADDLE_WIDTH/2, PADDLE_HEIGHT/2);
   
-  // graphics_printf("Make paddle at <%.2f,%.2f> with halves <%.2f,%.2f>",WORLD_WIDTH/2,PADDLE_Y, PADDLE_WIDTH/2, PADDLE_HEIGHT/2);
 
   state = IDLE;
   score = -1;
@@ -145,11 +98,6 @@ void reset() {
 
 bool onKeyDown(KeyPressEvent event) {
   char c = event.c;
-  // if (event.specialKey)
-  //   graphics_printf("Got special key! %s", special_key_names[event.specialKey]);
-  // else
-  //   graphics_printf("got %c|%d\n",c,c);
-  // if (event.modified) graphics_printf("Modifiers: ctrl:%d|alt:%d|shift:%d",event.ctrl,event.alt,event.shift);
   if (c=='q') {
     graphics_printf("quit!\n");
     return true;
@@ -187,7 +135,6 @@ void setup(int argc, char *argv[]) {
   world.SetAllowSleeping(true);
   world.SetContinuousPhysics(true);
   world.SetContactListener(&pongContactListener);
-  // worldBounds = {.lowerBound = b2Vec2(0,0), .upperBound = b2Vec2(WORLD_WIDTH,WORLD_HEIGHT)};
   reset();
 }
 
