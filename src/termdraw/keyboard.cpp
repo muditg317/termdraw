@@ -104,6 +104,12 @@ void KeyPressEvent::processSpecialBytes(void) {
   }
 }
 
+KeyboardGraphicsApplication::KeyboardGraphicsApplication() : GraphicsApplication() {
+  this->registerPreloop(this->keyboard_preloop);
+  this->registerLoop(this->keyboard_loop);
+  this->registerFinish(this->keyboard_finish);
+}
+
 static keyPressHandler *handler = 0;
 void registerKeyPressHandler(keyPressHandler _handler) {
   handler = _handler;
@@ -111,7 +117,7 @@ void registerKeyPressHandler(keyPressHandler _handler) {
 
 static struct termios oldSettings, newSettings;
 
-void keyboard_preloop(int argc, char *argv[]) {
+void KeyboardGraphicsApplication::keyboard_preloop(int argc, char *argv[]) {
   assert(handler != 0 && "Must set keypress handler if using keyboard main!");
 
   tcgetattr(STDIN_FILENO, &oldSettings );
@@ -122,7 +128,7 @@ void keyboard_preloop(int argc, char *argv[]) {
 }
 
 
-void keyboard_loop(void) {
+void KeyboardGraphicsApplication::keyboard_loop(void) {
   static int n = 0;
   while (ioctl(STDIN_FILENO, FIONREAD, &n) == 0 && n > 0) {
     assert(n <= MAX_INPUT_BYTES && "Cannot buffer more than MAX_INPUT_BYTES characters! must input slower");
@@ -165,18 +171,18 @@ void keyboard_loop(void) {
   }
 }
 
-void keyboard_finish(int signum) {
-  graphics_printf("Reset terminal settings!");
+void KeyboardGraphicsApplication::keyboard_finish(int signum) {
+  this->graphics_printf("Reset terminal settings!");
   tcsetattr(STDIN_FILENO, TCSANOW, &oldSettings );
 }
 
-int keyboard_main(int argc, char *argv[]) {
+int KeyboardGraphicsApplication::keyboard_main(int argc, char *argv[]) {
   // graphics_printf("Run keyboard main\n");
   registerPreloop(keyboard_preloop);
   registerLoop(keyboard_loop);
   registerFinish(keyboard_finish);
 
-  graphics_main(argc,argv);
+  this->graphics_main(argc,argv);
 
   return 0;
 }

@@ -8,6 +8,7 @@
 #include <iostream>
 #include <cstring>
 #include <chrono>
+#include <functional>
 #include <thread>
 #include <cmath>
 #include <string>
@@ -28,6 +29,10 @@ GraphicsApplication::GraphicsApplication()
     throw std::runtime_error("GraphicsApplication already exists!");
   }
   appCreated = true;
+  
+  this->registerPreloop(std::bind(&GraphicsApplication::graphics_preloop, this, std::placeholders::_1, std::placeholders::_2));
+  this->registerLoop(this->graphics_loop);
+  this->registerFinish(this->graphics_finish);
 }
 
 double GraphicsApplication::getFrameRate(void) {
@@ -102,7 +107,7 @@ std::vector<std::string> splitByDelimToCstr(std::string strToSplit, std::string 
   return res;
 }
 
-void _graphics_print_string(std::string result) {
+void GraphicsApplication::_graphics_print_string(std::string result) {
   // std::cout << "internal printer -- ==========" << result << "=========" << std::endl;
   std::string formatString = fmt::format("%-{}s\n", std::to_string(getConsoleSize().ws_col));
   // std::cout << "internal printer -- format: " << formatString << std::endl;
@@ -171,47 +176,19 @@ inline void resetCursor(void) {
 }
 
 
-std::function<preloopFunc> preloopFuncs[MAX_FUNCTION_REGISTRATIONS];
-int numPreloopFuncs = 0;
-void registerPreloop(preloopFunc func) {
+void GraphicsApplication::registerPreloop(GraphicsApplication::preloopFunc func) {
   assert(numPreloopFuncs < MAX_FUNCTION_REGISTRATIONS && "Too many preloop functions registered!");
   preloopFuncs[numPreloopFuncs++] = func;
 }
 
-std::function<loopFunc> loopFuncs[MAX_FUNCTION_REGISTRATIONS];
-int numLoopFuncs = 0;
-void registerLoop(loopFunc func) {
+void GraphicsApplication::registerLoop(GraphicsApplication::loopFunc func) {
   assert(numLoopFuncs < MAX_FUNCTION_REGISTRATIONS && "Too many loop functions registered!");
   loopFuncs[numLoopFuncs++] = func;
 }
 
-std::function<finishFunc> finishFuncs[MAX_FUNCTION_REGISTRATIONS];
-int numFinishFuncs = 0;
-void registerFinish(finishFunc func) {
+void GraphicsApplication::registerFinish(GraphicsApplication::finishFunc func) {
   assert(numFinishFuncs < MAX_FUNCTION_REGISTRATIONS && "Too many finish functions registered!");
   finishFuncs[numFinishFuncs++] = func;
-}
-
-static void preloop(int argc, char *argv[]) {
-  // graphics_printf("run preloops: %d\n", numPreloopFuncs);
-  for (int8_t i = numPreloopFuncs-1; i >= 0; --i) {
-    // graphics_printf("run preloop %d\n", i);
-    preloopFuncs[i](argc, argv);
-  }
-}
-
-static void loop(void) {
-  for (int8_t i = numLoopFuncs-1; i >= 0; --i) {
-    loopFuncs[i]();
-  }
-}
-
-static void finish(int signum = 0) {
-  // clean();
-  app->render();
-  for (int8_t i = numFinishFuncs-1; i >= 0; --i) {
-    finishFuncs[i](signum);
-  }
 }
 
 static std::chrono::time_point<std::chrono::system_clock> start;
@@ -221,22 +198,15 @@ static std::chrono::microseconds microSecDelay;
 
 static uint32_t framesComputed = 0;
 
-void graphics_preloop(int argc, char *argv[]) {
+void GraphicsApplication::preloop(int argc, char *argv[]) {
   // graphics_printf("run graphics preloop\n");
   // signal(SIGINT, finish);
   // signal(SIGTERM, finish);
 
-  struct sigaction signal_handler = {
-    .__sigaction_handler = finish,
-    .sa_flags = 0
-  };
-  sigemptyset(&signal_handler.sa_mask);
 
-  sigaction(SIGINT, &signal_handler, nullptr);
-  sigaction(SIGTERM, &signal_handler, nullptr);
 
-  app->setup(argc, argv);
-  // assert(app->dimsSet && "Must set dimensions for terminal drawing session! Call `display_size(width,height)`");
+  this->setup(argc, argv);
+  assert(this->dimsSet && "Must set dimensions for terminal drawing session! Call `display_size(width,height)`");
   
   printf("Finished termdraw setup!\n\tScreen:    \t%-3dx%3d\n\tConsole:\t%-3dx%3d\n\tFrame Rate:\t%.2f\n", WIDTH, HEIGHT, CONSOLE_WIDTH, CONSOLE_HEIGHT, FRAME_RATE);
 
@@ -249,11 +219,11 @@ void graphics_preloop(int argc, char *argv[]) {
   
   start = t = std::chrono::system_clock::now();
 
-  app->render();
+  this->render();
   resetCursor();
 }
 
-void graphics_loop() {
+void GraphicsApplication::graphics_loop(void) {
   // graphics_printf("run graphics loop\n");
 
   // printf("call update!\n");
@@ -269,7 +239,7 @@ void graphics_loop() {
   std::this_thread::sleep_until(t);
 }
 
-void graphics_finish(int signum) {
+void GraphicsApplication::graphics_finish(int signum) {
   // graphics_printf("run graphics finish\n");
   // if (signum) {
   //   std::cout << "Interrupt signal (" << signum << ") received.\n";
@@ -285,19 +255,12 @@ void graphics_finish(int signum) {
 
   printf("\nRendering stats:\n\ttime computed:   \t|%9ld ms\n\ttime computing:   \t|%9ld ms\n\trendering ratio:\t|%9.3f\n", timeMsComputed, timeMsComputing, ratio);
 
-  if (signum) {
-    exit(signum);
-  }
 }
 
 
 bool quit_application = false;
-int graphics_main(int argc, char *argv[]) {
+int GraphicsApplication::graphics_main(int argc, char *argv[]) {
   // graphics_printf("Run graphics main!\n");
-
-  registerPreloop(graphics_preloop);
-  registerLoop(graphics_loop);
-  registerFinish(graphics_finish);
 
   preloop(argc, argv);
 

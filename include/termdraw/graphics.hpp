@@ -69,7 +69,7 @@ class GraphicsApplication {
   int getHeight(void);
   PixelBuffer& getPixelBuffer(void);
   
-//  protected:
+ protected:
 
   /**
    * @brief set the dimensions for the graphics buffer
@@ -94,10 +94,44 @@ class GraphicsApplication {
    * @brief Zero out the pixel buffer
    */
   void clean(void);
+    
+  inline void graphics_printf(const char *format, ...) {
+    // ===== Option if buffer sizing becomes an issue
+    // int size = snprintf(NULL, 0, "%d", 132);
+    // char * a = malloc(size + 1);
+    // =================
+    static char buffer[1000];
+    va_list args;
+    va_start(args, format);
+    vsprintf(buffer, format, args);
+    // std::printf("Got printf call with format |%s| and result |%s|\n", format, buffer);
+    _graphics_print_string(*new std::string(buffer));
+    va_end(args);
+  }
+
+  
+  #define MAX_FUNCTION_REGISTRATIONS 5
+
+  typedef void preloopFunc(int argc, char *argv[]);
+  void registerPreloop(preloopFunc);
+
+  typedef void (GraphicsApplication::*loopFunc)(void);
+  void registerLoop(loopFunc);
+
+  typedef void (GraphicsApplication::*finishFunc)(int signum);
+  void registerFinish(finishFunc);
+
+  int graphics_main(int argc, char *argv[]);
 
  private:
   void allocate_buffers(void);
+  void _graphics_print_string(std::string);
 
+
+
+  preloopFunc graphics_preloop;
+  loopFunc graphics_loop;
+  finishFunc graphics_finish;
 
   double _frameRate;
   int _width;
@@ -108,40 +142,21 @@ class GraphicsApplication {
   bool pixelBufferAllocated;
 
   bool dimsSet;
+
+  // std::function<void(int,char*[])> preloopFuncs[MAX_FUNCTION_REGISTRATIONS];
+  preloopFunc preloopFuncs[MAX_FUNCTION_REGISTRATIONS];
+  int numPreloopFuncs = 0;
+  loopFunc loopFuncs[MAX_FUNCTION_REGISTRATIONS];
+  int numLoopFuncs = 0;
+  finishFunc finishFuncs[MAX_FUNCTION_REGISTRATIONS];
+  int numFinishFuncs = 0;
+
+
 };
 
-void _graphics_print_string(std::string);
-
-inline void graphics_printf(const char *format, ...) {
-  // ===== Option if buffer sizing becomes an issue
-  // int size = snprintf(NULL, 0, "%d", 132);
-  // char * a = malloc(size + 1);
-  // =================
-  static char buffer[1000];
-  va_list args;
-  va_start(args, format);
-  vsprintf(buffer, format, args);
-  // std::printf("Got printf call with format |%s| and result |%s|\n", format, buffer);
-  _graphics_print_string(*new std::string(buffer));
-  va_end(args);
-}
 
 extern bool quit_application;
 
-#define MAX_FUNCTION_REGISTRATIONS 5
-
-typedef void preloopFunc(int argc, char *argv[]);
-void registerPreloop(preloopFunc);
-
-typedef void loopFunc(void);
-void registerLoop(loopFunc);
-
-typedef void finishFunc(int signum);
-void registerFinish(finishFunc);
-
-preloopFunc graphics_preloop;
-loopFunc graphics_loop;
-finishFunc graphics_finish;
 
 int graphics_main(int argc, char *argv[]);
 
