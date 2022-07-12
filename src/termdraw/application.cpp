@@ -1,35 +1,81 @@
-#include <application.hpp>
+#include <termdraw/application.hpp>
 
 #include <cstdio>
 #include <csignal>
 
-
-void Application::preloop(int argc, char *argv[]) {
-  // graphics_printf("run preloops: %d\n", numPreloopFuncs);
-  for (int8_t i = numPreloopFuncs-1; i >= 0; --i) {
-    // graphics_printf("run preloop %d\n", i);
-    (this->*preloopFuncs[i])(argc, argv);
+template<typename ReturnType, typename... ArgTypes>
+void FunctionRegistry<ReturnType(ArgTypes...)>::registerFunction(__func_type func) {
+  if (locked) {
+    throw std::runtime_error("Function registry is locked! Cannot register new function");
   }
+  this->functions.push_back(func);
 }
 
-void Application::loop(void) {
-  for (int8_t i = numLoopFuncs-1; i >= 0; --i) {
-    (this->*loopFuncs[i])();
+template<typename ReturnType, typename... ArgTypes>
+void FunctionRegistry<ReturnType(ArgTypes...)>::lock(void) {
+  this->locked = true;
+}
+
+template<typename ReturnType, typename... ArgTypes>
+std::vector<ReturnType> FunctionRegistry<ReturnType(ArgTypes...)>::callFunctions(ArgTypes... args) {
+  if (!locked) {
+    throw std::runtime_error("Function registry is not locked! Cannot call functions\n");
   }
+  std::vector<ReturnType> results;
+  for (auto func : this->functions) {
+    results.push_back(func(args...));
+  }
+  return results;
+}
+
+Application::Application(void)
+    : quit_application(false) {
+  // this->registerPreloop(std::bind(&Application::preloop, this, std::placeholders::_1, std::placeholders::_2));
+  // this->registerLoop(this->loop);
+  // this->registerFinish(this->finish);
+}
+
+void Application::registerPreloop(preloopFunc func) {
+  this->preloopFunctionRegistry.registerFunction(func);
+}
+
+void Application::registerLoop(loopFunc func) {
+  this->loopFunctionRegistry.registerFunction(func);
+}
+
+void Application::registerFinish(finishFunc func) {
+  this->finishFunctionRegistry.registerFunction(func);
+}
+
+void Application::preloop(int argc, char *argv[]) {
+  this->preloopFunctionRegistry.callFunctions(argc, argv);
+}
+
+bool Application::loop(void) {
+  this->loopFunctionRegistry.callFunctions();
 }
 
 void Application::finish(int signum = 0) {
-  for (int8_t i = numFinishFuncs-1; i >= 0; --i) {
-    (this->*finishFuncs[i])(signum);
-  }
+  this->finishFunctionRegistry.callFunctions(signum);
   if (signum) {
     exit(signum);
   }
 }
 
+void Application::configure(void) {
+  this->lockRegistry();
+  this->setupSignalHandlers();
+}
+
+void Application::lockRegistry(void) {
+  this->preloopFunctionRegistry.lock();
+  this->loopFunctionRegistry.lock();
+  this->finishFunctionRegistry.lock();
+}
+
 void Application::setupSignalHandlers(void) {
   struct sigaction signal_handler = {
-    .__sigaction_handler = this->finish,
+    .__sigaction_handler = Application::staticSignalHandler,
     .sa_flags = 0
   };
   sigemptyset(&signal_handler.sa_mask);
@@ -38,8 +84,12 @@ void Application::setupSignalHandlers(void) {
   sigaction(SIGTERM, &signal_handler, nullptr);
 }
 
+void Application::staticSignalHandler(int signum) {
+  app->finish(signum);
+}
+
 int Application::run(int argc, char *argv[]) {
-  this->setupSignalHandlers();
+  this->configure();
 
   preloop(argc, argv);
 
