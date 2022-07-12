@@ -17,13 +17,16 @@ foreach (app_name ${apps})
   # glob source files for the app
   if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.11.0")
       file(GLOB_RECURSE ${app_name}_SRCS CONFIGURE_DEPENDS ${app_name}/*.cpp ${app_name}/*.cc)
+      file(GLOB_RECURSE ${app_name}_HDRS CONFIGURE_DEPENDS ${app_name}/*.hpp ${app_name}/*.h)
   else()
       file(GLOB ${app_name}_SRCS ${app_name}/*.cpp ${app_name}/*.cc)
+      file(GLOB ${app_name}_HDRS ${app_name}/*.hpp ${app_name}/*.h)
   endif()
 
   # add executable for the app
-  add_executable(${app_name} ${${app_name}_SRCS})
+  add_executable(${app_name} ${${app_name}_SRCS} ${${app_name}_HDRS})
   target_compile_features(${app_name} PRIVATE cxx_std_17)
+  target_include_directories(${app_name} PUBLIC ${app_name})
   # link any relevant libraries if present
   if(DEFINED ${app_name}_LIBRARIES)
     target_link_libraries(${app_name} PRIVATE ${${app_name}_LIBRARIES})

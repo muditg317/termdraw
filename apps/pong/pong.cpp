@@ -1,4 +1,7 @@
-#define KEYBOARD_MAIN
+#include <pong.hpp>
+
+// #define KEYBOARD_MAIN
+#include <termdraw/application.hpp>
 #include <termdraw/graphics.hpp>
 #include <termdraw/keyboard.hpp>
 #include <termdraw/shapes.hpp>
@@ -96,16 +99,16 @@ void reset() {
   score = -1;
 }
 
-bool onKeyDown(KeyPressEvent event) {
+void Pong::keyPressHandler(KeyPressEvent event) {
   char c = event.c;
   if (c=='q') {
     graphics_printf("quit!\n");
-    return true;
+    this->quit();
   }
   if (c == 'r') {
     graphics_printf("reset!\n");
     reset();
-    return false;
+    return;
   }
   if (state == IDLE) {
     if (c == ' ' && state == IDLE) {
@@ -122,12 +125,9 @@ bool onKeyDown(KeyPressEvent event) {
       paddle->SetTransform(*new b2Vec2(newX, PADDLE_Y), paddle->GetAngle());
     }
   }
-  return false;
 }
 
-void GraphicsApplication::setup(int argc, char *argv[]) {
-  registerKeyPressHandler(onKeyDown);
-
+void Pong::setup(int argc, char *argv[]) {
   display_size_based_on_console(5);
   // display_size(256,128);
 
@@ -143,7 +143,7 @@ void startGame(void) {
   state = RUNNING;
 }
 
-void GraphicsApplication::update() {
+void Pong::update() {
   clean();
 
   if (state == START) {
@@ -155,3 +155,5 @@ void GraphicsApplication::update() {
   drawCircleBody(ball);
   drawRectBody(paddle);
 }
+
+std::shared_ptr<Application> app(new Pong());

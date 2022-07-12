@@ -50,40 +50,22 @@ typedef struct KeyPressEvent {
 
 } KeyPressEvent;
 
-typedef bool keyPressHandler(KeyPressEvent);
 
 class KeyboardGraphicsApplication : public GraphicsApplication {
  public:
   KeyboardGraphicsApplication();
+  virtual ~KeyboardGraphicsApplication();
 
  protected:
-  /**
-   * @brief register a key pres handler for the graphics session
-   * should return boolean (true to terminate program, false otherwise)
-   */
-  void registerKeyPressHandler(keyPressHandler *);
-
+  virtual void keyPressHandler(KeyPressEvent) = 0;
 
  private:
-
-  GraphicsApplication::preloopFunc keyboard_preloop;
-  // void keyboard_preloop(int argc, char *argv[]);
+  void keyboard_preloop(int argc, char *argv[]);
   void keyboard_loop(void);
   void keyboard_finish(int signum=0);
 
   int keyboard_main(int argc, char *argv[]);
-
-  keyPressHandler *keyPressHandler;
 };
-
-
-#ifdef KEYBOARD_MAIN
-GraphicsApplication *app;
-int main(int argc, char *argv[]) {
-  app = new GraphicsApplication();
-  keyboard_main(argc, argv);
-}
-#endif
 
 
 #endif

@@ -1,6 +1,8 @@
 #ifndef GRAPHICS_HPP
 #define GRAPHICS_HPP
 
+#include <termdraw/application.hpp>
+
 #include <cassert>
 #include <chrono>
 #include <cstdarg>
@@ -15,12 +17,10 @@ using PixBuf = Eigen::Matrix<PIX_BUF_MATRIX_T, T1, T2>;
 
 typedef PixBuf<Eigen::Dynamic, Eigen::Dynamic> PixelBuffer;
 
-class GraphicsApplication;
+#define APP_AS_GRAPHICS_APP (*static_cast<GraphicsApplication*>(app.get()))
 
-extern GraphicsApplication *app;
-
-double getFrameRate();
-#define FRAME_RATE (app->getFrameRate())
+// double getFrameRate();
+#define FRAME_RATE (APP_AS_GRAPHICS_APP.getFrameRate())
 #define DEFAULT_FRAME_RATE 15.0
 #define MAX_FR_RECOMMENDATION 60.0
 
@@ -29,13 +29,13 @@ double getFrameRate();
 #define DELTA_T_SEC (1.0 / (FRAME_RATE))
 
 // int getWidth();
-#define WIDTH (app->getWidth())
+#define WIDTH (APP_AS_GRAPHICS_APP.getWidth())
 
 // int getHeight();
-#define HEIGHT (app->getHeight())
+#define HEIGHT (APP_AS_GRAPHICS_APP.getHeight())
 
 // PixelBuffer& getPixelBuffer();
-#define BUFFER (app->getPixelBuffer())
+#define BUFFER (APP_AS_GRAPHICS_APP.getPixelBuffer())
 
 #define WIDTH_SCALE 2
 #define CONSOLE_WIDTH (WIDTH/WIDTH_SCALE)
@@ -47,29 +47,27 @@ double getFrameRate();
 
 static_assert(HEIGHT_SCALE == WIDTH_SCALE * 2, "Height must be scaled exactly twice as much as width!!");
 
-class GraphicsApplication {
+class GraphicsApplication : public Application {
  public:
-  // static bool appCreated; // MUST BE FALSE
   GraphicsApplication();
+  // virtual ~GraphicsApplication();
+
+  double getFrameRate(void) const;
+  int getWidth(void) const;
+  int getHeight(void) const;
+  PixelBuffer& getPixelBuffer(void);
+  
+ protected:
 
   /**
    * @brief setup for graphics - called directly from main
    */
-  void setup(int argc, char *argv[]);
+  virtual void setup(int argc, char *argv[]) = 0;
 
   /**
    * @brief update the pixel buffer however desired before the next render call
    */
-  void update(void);
-
-  void render(void);
-
-  double getFrameRate(void);
-  int getWidth(void);
-  int getHeight(void);
-  PixelBuffer& getPixelBuffer(void);
-  
- protected:
+  virtual void update(void) = 0;
 
   /**
    * @brief set the dimensions for the graphics buffer
@@ -94,40 +92,12 @@ class GraphicsApplication {
    * @brief Zero out the pixel buffer
    */
   void clean(void);
-    
-  inline void graphics_printf(const char *format, ...) {
-    // ===== Option if buffer sizing becomes an issue
-    // int size = snprintf(NULL, 0, "%d", 132);
-    // char * a = malloc(size + 1);
-    // =================
-    static char buffer[1000];
-    va_list args;
-    va_start(args, format);
-    vsprintf(buffer, format, args);
-    // std::printf("Got printf call with format |%s| and result |%s|\n", format, buffer);
-    _graphics_print_string(*new std::string(buffer));
-    va_end(args);
-  }
-
-  
-  #define MAX_FUNCTION_REGISTRATIONS 5
-
-  typedef void preloopFunc(int argc, char *argv[]);
-  void registerPreloop(preloopFunc);
-
-  typedef void (GraphicsApplication::*loopFunc)(void);
-  void registerLoop(loopFunc);
-
-  typedef void (GraphicsApplication::*finishFunc)(int signum);
-  void registerFinish(finishFunc);
 
   int graphics_main(int argc, char *argv[]);
 
  private:
   void allocate_buffers(void);
-  void _graphics_print_string(std::string);
-
-
+  void render(void);
 
   preloopFunc graphics_preloop;
   loopFunc graphics_loop;
@@ -143,28 +113,23 @@ class GraphicsApplication {
 
   bool dimsSet;
 
-  // std::function<void(int,char*[])> preloopFuncs[MAX_FUNCTION_REGISTRATIONS];
-  preloopFunc preloopFuncs[MAX_FUNCTION_REGISTRATIONS];
-  int numPreloopFuncs = 0;
-  loopFunc loopFuncs[MAX_FUNCTION_REGISTRATIONS];
-  int numLoopFuncs = 0;
-  finishFunc finishFuncs[MAX_FUNCTION_REGISTRATIONS];
-  int numFinishFuncs = 0;
-
-
 };
 
 
-extern bool quit_application;
+void _graphics_print_string(std::string result);
 
-
-int graphics_main(int argc, char *argv[]);
-
-#ifdef GRAPHICS_MAIN
-int main(int argc, char *argv[]) {
-  graphics_main(argc, argv);
+inline void graphics_printf(const char *format, ...) {
+  // ===== Option if buffer sizing becomes an issue
+  // int size = snprintf(NULL, 0, "%d", 132);
+  // char * a = malloc(size + 1);
+  // =================
+  static char buffer[1000];
+  va_list args;
+  va_start(args, format);
+  vsprintf(buffer, format, args);
+  // std::printf("Got printf call with format |%s| and result |%s|\n", format, buffer);
+  _graphics_print_string(*new std::string(buffer));
+  va_end(args);
 }
-#endif
-
 
 #endif

@@ -20,30 +20,33 @@
 #include <Eigen/Eigen>
 // #include <boost/algorithm/string/join.hpp>
 
-static bool appCreated = false;
 GraphicsApplication::GraphicsApplication()
-    : _frameRate(DEFAULT_FRAME_RATE),
+    : Application(),
+      _frameRate(DEFAULT_FRAME_RATE),
       pixelBufferAllocated(false),
       dimsSet(false) {
-  if (appCreated) {
-    throw std::runtime_error("GraphicsApplication already exists!");
-  }
-  appCreated = true;
-  
   this->registerPreloop(std::bind(&GraphicsApplication::graphics_preloop, this, std::placeholders::_1, std::placeholders::_2));
-  this->registerLoop(this->graphics_loop);
-  this->registerFinish(this->graphics_finish);
+  this->registerLoop(std::bind(&GraphicsApplication::graphics_loop, this));
+  this->registerFinish(std::bind(&GraphicsApplication::graphics_finish, this, std::placeholders::_1));
+
 }
 
-double GraphicsApplication::getFrameRate(void) {
+// GraphicsApplication::~GraphicsApplication() {
+//   // if (this->pixelBufferAllocated) {
+//   //   delete[] this->pixelBuffer;
+//   // }
+// }
+
+
+double GraphicsApplication::getFrameRate(void) const {
   return _frameRate;
 }
 
-int GraphicsApplication::getWidth(void) {
+int GraphicsApplication::getWidth(void) const {
   return _width;
 }
 
-int GraphicsApplication::getHeight(void) {
+int GraphicsApplication::getHeight(void) const {
   return _height;
 }
 
@@ -107,26 +110,7 @@ std::vector<std::string> splitByDelimToCstr(std::string strToSplit, std::string 
   return res;
 }
 
-void GraphicsApplication::_graphics_print_string(std::string result) {
-  // std::cout << "internal printer -- ==========" << result << "=========" << std::endl;
-  std::string formatString = fmt::format("%-{}s\n", std::to_string(getConsoleSize().ws_col));
-  // std::cout << "internal printer -- format: " << formatString << std::endl;
 
-  std::vector<std::string> resLines = splitByDelimToCstr(result, "\n");
-  // std::cout << "internal printer -- lines: " << resLines.size() << std::endl;
-  std::string lastLine = resLines.back();
-  for (std::string line : resLines) {
-    // std::cout << "internal printer -- line: " << line << std::endl;
-    if (line == lastLine) {
-      if (line.size() == 0) {
-        return;
-      }
-      formatString = formatString.substr(0, formatString.size()-1); // remove \n
-    }
-    // std::cout << "internal printer -- format: " << formatString << std::endl;
-    std::printf(formatString.c_str(), line.c_str());
-  }
-}
 
 inline char pixelsToBraille_offset1(PixBuf<WIDTH_SCALE,HEIGHT_SCALE> pixelGroup) {
   return pixelGroup(0,3) + (pixelGroup(1,3) << 1);
@@ -175,22 +159,6 @@ inline void resetCursor(void) {
   // getCursorPos(&lastCursorX,&lastCursorY);
 }
 
-
-void GraphicsApplication::registerPreloop(GraphicsApplication::preloopFunc func) {
-  assert(numPreloopFuncs < MAX_FUNCTION_REGISTRATIONS && "Too many preloop functions registered!");
-  preloopFuncs[numPreloopFuncs++] = func;
-}
-
-void GraphicsApplication::registerLoop(GraphicsApplication::loopFunc func) {
-  assert(numLoopFuncs < MAX_FUNCTION_REGISTRATIONS && "Too many loop functions registered!");
-  loopFuncs[numLoopFuncs++] = func;
-}
-
-void GraphicsApplication::registerFinish(GraphicsApplication::finishFunc func) {
-  assert(numFinishFuncs < MAX_FUNCTION_REGISTRATIONS && "Too many finish functions registered!");
-  finishFuncs[numFinishFuncs++] = func;
-}
-
 static std::chrono::time_point<std::chrono::system_clock> start;
 
 static std::chrono::time_point<std::chrono::system_clock> t;
@@ -198,7 +166,7 @@ static std::chrono::microseconds microSecDelay;
 
 static uint32_t framesComputed = 0;
 
-void GraphicsApplication::preloop(int argc, char *argv[]) {
+void GraphicsApplication::graphics_preloop(int argc, char *argv[]) {
   // graphics_printf("run graphics preloop\n");
   // signal(SIGINT, finish);
   // signal(SIGTERM, finish);
@@ -227,9 +195,9 @@ void GraphicsApplication::graphics_loop(void) {
   // graphics_printf("run graphics loop\n");
 
   // printf("call update!\n");
-  app->update();
+  update();
   // printf("call render!\n");
-  app->render();
+  render();
   // printf("call reset!\n");
   resetCursor();
 
@@ -245,6 +213,7 @@ void GraphicsApplication::graphics_finish(int signum) {
   //   std::cout << "Interrupt signal (" << signum << ") received.\n";
   // }
 
+  render();
 
   std::chrono::time_point<std::chrono::system_clock> sim_end = std::chrono::system_clock::now();
   auto timeMsComputing = (std::chrono::duration_cast<std::chrono::milliseconds>(sim_end.time_since_epoch()) - std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch())).count();
@@ -257,17 +226,23 @@ void GraphicsApplication::graphics_finish(int signum) {
 
 }
 
+void _graphics_print_string(std::string result) {
+  // std::cout << "internal printer -- ==========" << result << "=========" << std::endl;
+  std::string formatString = fmt::format("%-{}s\n", std::to_string(getConsoleSize().ws_col));
+  // std::cout << "internal printer -- format: " << formatString << std::endl;
 
-bool quit_application = false;
-int GraphicsApplication::graphics_main(int argc, char *argv[]) {
-  // graphics_printf("Run graphics main!\n");
-
-  preloop(argc, argv);
-
-  while (!quit_application) {
-    loop();
+  std::vector<std::string> resLines = splitByDelimToCstr(result, "\n");
+  // std::cout << "internal printer -- lines: " << resLines.size() << std::endl;
+  std::string lastLine = resLines.back();
+  for (std::string line : resLines) {
+    // std::cout << "internal printer -- line: " << line << std::endl;
+    if (line == lastLine) {
+      if (line.size() == 0) {
+        return;
+      }
+      formatString = formatString.substr(0, formatString.size()-1); // remove \n
+    }
+    // std::cout << "internal printer -- format: " << formatString << std::endl;
+    std::printf(formatString.c_str(), line.c_str());
   }
-
-  finish();
-  return 0;
 }

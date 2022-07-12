@@ -6,6 +6,8 @@
 #include <sys/ioctl.h>
 #include <cctype>
 #include <termios.h>
+#include <functional>
+#include <stdexcept>
 
 KeyPressEvent::KeyPressEvent(char byte) :
   c(byte),
@@ -104,27 +106,27 @@ void KeyPressEvent::processSpecialBytes(void) {
   }
 }
 
-KeyboardGraphicsApplication::KeyboardGraphicsApplication() : GraphicsApplication() {
-  this->registerPreloop(this->keyboard_preloop);
-  this->registerLoop(this->keyboard_loop);
-  this->registerFinish(this->keyboard_finish);
+KeyboardGraphicsApplication::KeyboardGraphicsApplication()
+    : GraphicsApplication() {
+  this->registerPreloop(std::bind(&KeyboardGraphicsApplication::keyboard_preloop, this, std::placeholders::_1, std::placeholders::_2));
+  this->registerLoop(std::bind(&KeyboardGraphicsApplication::keyboard_loop, this));
+  this->registerFinish(std::bind(&KeyboardGraphicsApplication::keyboard_finish, this, std::placeholders::_1));
 }
 
-static keyPressHandler *handler = 0;
-void registerKeyPressHandler(keyPressHandler _handler) {
-  handler = _handler;
-}
+KeyboardGraphicsApplication::~KeyboardGraphicsApplication() {}
+
+// void KeyboardGraphicsApplication::setupRegistryFuncs(void) {
+//   GraphicsApplication::setupRegistryFuncs();
+// }
+
 
 static struct termios oldSettings, newSettings;
 
 void KeyboardGraphicsApplication::keyboard_preloop(int argc, char *argv[]) {
-  assert(handler != 0 && "Must set keypress handler if using keyboard main!");
-
   tcgetattr(STDIN_FILENO, &oldSettings );
   newSettings = oldSettings;
   newSettings.c_lflag &= (~ICANON & ~ECHO);
   tcsetattr(STDIN_FILENO, TCSANOW, &newSettings );
-  quit_application = false;
 }
 
 
@@ -140,7 +142,7 @@ void KeyboardGraphicsApplication::keyboard_loop(void) {
     int controlSeqStart = -1;
     int controlSeqEnd = -1;
 
-    for (int i = 0; i < n && !quit_application; i++) {
+    for (int i = 0; i < n; i++) {
       if (controlSeqStart != -1) {
         if (controlSeqStart == i-1 && buffer[i] != '[' && buffer[i] != 'O' && !std::islower(buffer[i])) {
           // just started
@@ -153,7 +155,7 @@ void KeyboardGraphicsApplication::keyboard_loop(void) {
         }
         if (controlSeqEnd != -1) {
           // graphics_printf("end control sequence! %d", controlSeqEnd);
-          quit_application = handler(KeyPressEvent(buffer + controlSeqStart, controlSeqEnd - controlSeqStart + 1));
+          this->keyPressHandler(KeyPressEvent(buffer + controlSeqStart, controlSeqEnd - controlSeqStart + 1));
           controlSeqStart = -1;
           controlSeqEnd = -1;
         }
@@ -161,28 +163,17 @@ void KeyboardGraphicsApplication::keyboard_loop(void) {
         controlSeqStart = i;
         // graphics_printf("start control sequence! %d", i);
       } else if (controlSeqStart == -1) {
-        quit_application = handler(KeyPressEvent(buffer[i]));
+        this->keyPressHandler(KeyPressEvent(buffer[i]));
       }
     }
     if (controlSeqStart != -1) {
       controlSeqEnd = n-1;
-      quit_application = handler(KeyPressEvent(buffer + controlSeqStart, controlSeqEnd - controlSeqStart + 1));
+      this->keyPressHandler(KeyPressEvent(buffer + controlSeqStart, controlSeqEnd - controlSeqStart + 1));
     }
   }
 }
 
 void KeyboardGraphicsApplication::keyboard_finish(int signum) {
-  this->graphics_printf("Reset terminal settings!");
+  graphics_printf("Reset terminal settings!");
   tcsetattr(STDIN_FILENO, TCSANOW, &oldSettings );
-}
-
-int KeyboardGraphicsApplication::keyboard_main(int argc, char *argv[]) {
-  // graphics_printf("Run keyboard main\n");
-  registerPreloop(keyboard_preloop);
-  registerLoop(keyboard_loop);
-  registerFinish(keyboard_finish);
-
-  this->graphics_main(argc,argv);
-
-  return 0;
 }
