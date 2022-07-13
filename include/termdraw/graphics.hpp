@@ -17,6 +17,10 @@ using PixBuf = Eigen::Matrix<PIX_BUF_MATRIX_T, T1, T2>;
 
 typedef PixBuf<Eigen::Dynamic, Eigen::Dynamic> PixelBuffer;
 
+typedef PIX_BUF_MATRIX_T pixelValue;
+constexpr pixelValue WHITE = 1;
+constexpr pixelValue BLACK = 0;
+
 #define APP_AS_GRAPHICS_APP (*static_cast<GraphicsApplication*>(app.get()))
 
 // double getFrameRate();
@@ -92,6 +96,8 @@ class GraphicsApplication : public Application {
    * @brief Zero out the pixel buffer
    */
   void clean(void);
+
+  void fill(pixelValue); // fill with a single value
 
   int graphics_main(int argc, char *argv[]);
 

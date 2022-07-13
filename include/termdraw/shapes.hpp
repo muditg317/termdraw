@@ -1,12 +1,14 @@
 #ifndef SHAPES_HPP
 #define SHAPES_HPP
 
+#include <termdraw/graphics.hpp>
+
 #include <Eigen/Eigen>
 #include <vector>
 
 typedef Eigen::Array<bool, Eigen::Dynamic, Eigen::Dynamic> ArrayCompType;
 typedef Eigen::Matrix<bool, -1, -1> MatrixXb;
-typedef std::pair<ArrayCompType,MatrixXb> CacheablePixelData;
+typedef ArrayCompType CacheablePixelData;
 template<typename Key>
 using cachedDataMap = std::map<Key, CacheablePixelData, std::less<Key>, Eigen::aligned_allocator<std::pair<const Key, CacheablePixelData>>>;
 
@@ -15,10 +17,10 @@ using cachedDataMap = std::map<Key, CacheablePixelData, std::less<Key>, Eigen::a
  * vector center
  * float radius
  */
-void circle(Eigen::Vector2f, float);
+void circle(Eigen::Vector2f, float, pixelValue = WHITE);
 
-inline void circle(float x, float y, float r) {
-  return circle(Eigen::Vector2f(x,y), r);
+inline void circle(float x, float y, float r, pixelValue value = WHITE) {
+  return circle(Eigen::Vector2f(x,y), r, value);
 }
 
 /**
@@ -26,7 +28,7 @@ inline void circle(float x, float y, float r) {
  * Eigen::Vector2f corner-topleft (x,y)
  * Eigen::Vector2f dims           (w,h)
  */
-void rect(Eigen::Vector2f,Eigen::Vector2f);
+void rect(Eigen::Vector2f,Eigen::Vector2f, pixelValue=WHITE);
 
 /**
  * @brief draw rect starting at x,y with dims w,h
@@ -35,8 +37,8 @@ void rect(Eigen::Vector2f,Eigen::Vector2f);
  * float width
  * float height
  */
-inline void rect(float x, float y, float w, float h) {
-  return rect(Eigen::Vector2f(x,y), Eigen::Vector2f(w,h));
+inline void rect(float x, float y, float w, float h, pixelValue value = WHITE) {
+  return rect(Eigen::Vector2f(x,y), Eigen::Vector2f(w,h), value);
 }
 
 

@@ -149,6 +149,10 @@ inline void GraphicsApplication::render(void) {
 void GraphicsApplication::clean(void) {
   pixelBuffer.setZero();
 }
+void GraphicsApplication::fill(pixelValue value) {
+  pixelBuffer.setConstant(value);
+}
+
 /**
  * @brief move the cursor to the top of the drawing region
  * Clear the rest of any printed lines so the screen isn't duplicated
