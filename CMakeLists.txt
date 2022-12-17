@@ -29,7 +29,6 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 endif()
 
 # Accumulator library
-include(/home/muditg317/application-installs/vcpkg/scripts/buildsystems/vcpkg.cmake)
 # This is header only, so could be replaced with git submodules or FetchContent
 # Adds fmt::fmt
 find_package(fmt CONFIG REQUIRED)

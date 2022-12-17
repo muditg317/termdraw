@@ -10,9 +10,9 @@ if [ -z "$_cmake" ]; then
     exit 1
 fi
 
-_cc=/bin/clang
-cxx=/bin/clang++-10
-toolchain=/home/muditg317/application-installs/vcpkg/scripts/buildsystems/vcpkg.cmake
+_cc=$(command -v clang)
+cxx=$(command -v clang++)
+toolchain=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
 
 proj_dir=$(pwd)
 build_dir=$proj_dir/build
