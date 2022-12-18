@@ -1,3 +1,5 @@
+#include <stdexcept>
+
 template<typename ReturnType, int MAX_FUNCS, typename... ArgTypes>
 void FunctionRegistry<ReturnType(ArgTypes...), MAX_FUNCS>::registerFunction(__func_type func) {
   if (locked) {

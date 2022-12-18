@@ -36,7 +36,6 @@ void applyCachedData(CacheablePixelData &mask, int minX, int minY, int maxX, int
   ArrayCompType arrCmp = mask(Eigen::seq(dataMinX,dataMaxX),Eigen::seq(dataMinY,dataMaxY));
 
   if (bufferChunk.size() != arrCmp.size()) {
-    // printf("circle: <%.2f,%.2f> r=%.2f\n",center.x(),center.y(),radius);
     graphics_printf("pixels: <%d,%d> to <%d,%d>\n",minX,minY,maxX,maxY);
     graphics_printf("data: <%d,%d> to <%d,%d>\n",dataMinX,dataMinY,dataMaxX,dataMaxY);
     std::cout << "buffer:" << bufferChunk.size() << "\n" << bufferChunk << std::endl;
@@ -75,6 +74,7 @@ void circle(Eigen::Vector2f center, float radius, pixelValue value) {
   int maxX = int(center.x())+radCeil;
   int maxY = int(center.y())+radCeil;
 
+  // printf("circle: <%.2f,%.2f> r=%.2f\n",center.x(),center.y(),radius);
   applyCachedData(circleMapIter->second, minX, minY, maxX, maxY, radCeil2p1-1,radCeil2p1-1, value);
 }
 
