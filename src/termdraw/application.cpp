@@ -51,10 +51,9 @@ void Application::lockRegistry(void) {
 }
 
 void Application::setupSignalHandlers(void) {
-  struct sigaction signal_handler = {
-    .__sigaction_handler = Application::staticSignalHandler,
-    .sa_flags = 0
-  };
+  struct sigaction signal_handler;
+  signal_handler.sa_handler = Application::staticSignalHandler;
+  signal_handler.sa_flags = 0;
   sigemptyset(&signal_handler.sa_mask);
 
   sigaction(SIGINT, &signal_handler, nullptr);

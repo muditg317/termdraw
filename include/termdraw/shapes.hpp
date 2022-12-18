@@ -4,10 +4,11 @@
 #include <termdraw/graphics.hpp>
 
 #include <Eigen/Eigen>
+#include <map>
 #include <vector>
 
 typedef Eigen::Array<bool, Eigen::Dynamic, Eigen::Dynamic> ArrayCompType;
-typedef Eigen::Matrix<bool, -1, -1> MatrixXb;
+typedef Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> MatrixXb;
 typedef ArrayCompType CacheablePixelData;
 template<typename Key>
 using cachedDataMap = std::map<Key, CacheablePixelData, std::less<Key>, Eigen::aligned_allocator<std::pair<const Key, CacheablePixelData>>>;
