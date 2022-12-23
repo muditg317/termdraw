@@ -1,9 +1,13 @@
-#ifndef PONG_HPP
-#define PONG_HPP
+#pragma once
 
+#include <termdraw/application.hpp>
+#include <termdraw/graphics.hpp>
 #include <termdraw/keyboard.hpp>
 
-class Pong : public KeyboardGraphicsApplication {
+class Pong : public termdraw::Application<termdraw::graphics::Graphics,termdraw::keyboard::Keyboard> {
+ public:
+  Pong();
+
  protected:
   /**
    * @brief setup for graphics - called directly from main
@@ -15,7 +19,8 @@ class Pong : public KeyboardGraphicsApplication {
    */
   void update(void);
 
-  void keyPressHandler(KeyPressEvent);
+  void keyPressHandler(termdraw::keyboard::KeyPressEvent);
 };
 
-#endif
+
+DEFINE_APPLICATION(Pong)

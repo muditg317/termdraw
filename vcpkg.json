@@ -4,7 +4,6 @@
   "dependencies": [
     { "name": "eigen3", "version>=": "3.4.0" },
     "fmt",
-    "boost",
     "catch2",
     "box2d"
   ],

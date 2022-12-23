@@ -50,6 +50,6 @@ class FunctionRegistry<void(ArgTypes...), MAX_FUNCS> {
   bool locked;
 };
 
-#include <termdraw/function-registry_impl.hpp>
+#include <termdraw/function-registry.ipp>
 
 #endif

@@ -1,9 +1,10 @@
-#ifndef KEYBOARD_HPP
-#define KEYBOARD_HPP
+#pragma once
 
-#include <termdraw/graphics.hpp>
+#include <termdraw/application.hpp>
+#include <termdraw/capability.hpp>
 
 #include <cstddef>
+#include <functional>
 
 #define MAX_INPUT_BYTES 10
 
@@ -21,6 +22,10 @@ X(PAGE_DOWN, "PAGE_DOWN") \
 X(HOME, "HOME") \
 X(END, "END") \
 X(ALT_LOWERCASE, "ALT_LOWERCASE")
+
+namespace termdraw {
+
+namespace keyboard {
 
 #define X(key, name) key,
 enum SpecialKey : size_t {
@@ -51,13 +56,17 @@ typedef struct KeyPressEvent {
 } KeyPressEvent;
 
 
-class KeyboardGraphicsApplication : public GraphicsApplication {
+class Keyboard : public Capability {
+
+  typedef std::function<void(KeyPressEvent)> keyPressHandlerFunc_t;
+
  public:
-  KeyboardGraphicsApplication();
-  virtual ~KeyboardGraphicsApplication();
+  Keyboard(keyPressHandlerFunc_t);
+  ~Keyboard();
 
  protected:
-  virtual void keyPressHandler(KeyPressEvent) = 0;
+  // virtual void keyPressHandler(KeyPressEvent) = 0;
+  keyPressHandlerFunc_t keyPressHandler;
 
  private:
   void keyboard_preloop(int argc, char *argv[]);
@@ -67,5 +76,6 @@ class KeyboardGraphicsApplication : public GraphicsApplication {
   int keyboard_main(int argc, char *argv[]);
 };
 
+} // namespace keyboard
 
-#endif
+} // namespace termdraw

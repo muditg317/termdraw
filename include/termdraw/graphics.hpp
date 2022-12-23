@@ -1,7 +1,8 @@
-#ifndef GRAPHICS_HPP
-#define GRAPHICS_HPP
+#pragma once
 
 #include <termdraw/application.hpp>
+#include <termdraw/base.hpp>
+#include <termdraw/capability.hpp>
 
 #include <cassert>
 #include <chrono>
@@ -21,10 +22,14 @@ typedef PIX_BUF_MATRIX_T pixelValue;
 constexpr pixelValue WHITE = 1;
 constexpr pixelValue BLACK = 0;
 
-#define APP_AS_GRAPHICS_APP (*static_cast<GraphicsApplication*>(app.get()))
+#define GRAPHICS_CAPABILITY_NAME "graphics"
+
+
+#define APP_GRAPHICS (termdraw::app->getCapability<termdraw::graphics::Graphics>())
+#define GRAPHICS (getCapability<termdraw::graphics::Graphics>())
 
 // double getFrameRate();
-#define FRAME_RATE (APP_AS_GRAPHICS_APP.getFrameRate())
+#define FRAME_RATE (APP_GRAPHICS.getFrameRate())
 #define DEFAULT_FRAME_RATE 15.0
 #define MAX_FR_RECOMMENDATION 60.0
 
@@ -33,13 +38,13 @@ constexpr pixelValue BLACK = 0;
 #define DELTA_T_SEC (1.0 / (FRAME_RATE))
 
 // int getWidth();
-#define WIDTH (APP_AS_GRAPHICS_APP.getWidth())
+#define WIDTH (APP_GRAPHICS.getWidth())
 
 // int getHeight();
-#define HEIGHT (APP_AS_GRAPHICS_APP.getHeight())
+#define HEIGHT (APP_GRAPHICS.getHeight())
 
 // PixelBuffer& getPixelBuffer();
-#define BUFFER (APP_AS_GRAPHICS_APP.getPixelBuffer())
+#define BUFFER (APP_GRAPHICS.getPixelBuffer())
 
 #define WIDTH_SCALE 2
 #define CONSOLE_WIDTH (WIDTH/WIDTH_SCALE)
@@ -51,28 +56,24 @@ constexpr pixelValue BLACK = 0;
 
 static_assert(HEIGHT_SCALE == WIDTH_SCALE * 2, "Height must be scaled exactly twice as much as width!!");
 
-class GraphicsApplication : public Application {
+namespace termdraw {
+
+namespace graphics {
+
+class Graphics : public Capability {
+
+  typedef std::function<void(int, char **)> setupFunc_t;
+  typedef std::function<void(void)> updateFunc_t;
+
  public:
-  GraphicsApplication();
-  // virtual ~GraphicsApplication();
+  Graphics(setupFunc_t, updateFunc_t);
+  // virtual ~Graphics();
 
   double getFrameRate(void) const;
   int getWidth(void) const;
   int getHeight(void) const;
   PixelBuffer& getPixelBuffer(void);
   
- protected:
-
-  /**
-   * @brief setup for graphics - called directly from main
-   */
-  virtual void setup(int argc, char *argv[]) = 0;
-
-  /**
-   * @brief update the pixel buffer however desired before the next render call
-   */
-  virtual void update(void) = 0;
-
   /**
    * @brief set the dimensions for the graphics buffer
    * int width
@@ -99,9 +100,20 @@ class GraphicsApplication : public Application {
 
   void fill(pixelValue); // fill with a single value
 
-  int graphics_main(int argc, char *argv[]);
-
  private:
+ 
+  /**
+   * @brief setup for graphics - called directly from main
+   */
+  // virtual void setup(int argc, char *argv[]) = 0;
+  setupFunc_t setup;
+
+  /**
+   * @brief update the pixel buffer however desired before the next render call
+   */
+  // virtual void update(void) = 0;
+  updateFunc_t update;
+
   void allocate_buffers(void);
   void render(void);
 
@@ -119,12 +131,14 @@ class GraphicsApplication : public Application {
 
   bool dimsSet;
 
+  template<class... Capabilities>
+  friend class Application;
 };
 
 
 void _graphics_print_string(std::string result);
 
-inline void graphics_printf(const char *format, ...) {
+inline void printf(const char *format, ...) {
   // ===== Option if buffer sizing becomes an issue
   // int size = snprintf(NULL, 0, "%d", 132);
   // char * a = malloc(size + 1);
@@ -138,4 +152,6 @@ inline void graphics_printf(const char *format, ...) {
   va_end(args);
 }
 
-#endif
+}  // namespace graphics
+
+}  // namespace termdraw

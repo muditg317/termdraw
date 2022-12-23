@@ -1,11 +1,12 @@
-#ifndef SHAPES_HPP
-#define SHAPES_HPP
+#pragma once
 
 #include <termdraw/graphics.hpp>
 
 #include <Eigen/Eigen>
 #include <map>
 #include <vector>
+
+namespace termdraw {
 
 typedef Eigen::Array<bool, Eigen::Dynamic, Eigen::Dynamic> ArrayCompType;
 typedef Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> MatrixXb;
@@ -43,4 +44,4 @@ inline void rect(float x, float y, float w, float h, pixelValue value = WHITE) {
 }
 
 
-#endif
+} // namespace termdraw

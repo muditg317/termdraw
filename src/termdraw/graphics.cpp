@@ -20,43 +20,49 @@
 #include <Eigen/Eigen>
 // #include <boost/algorithm/string/join.hpp>
 
-GraphicsApplication::GraphicsApplication()
-    : Application(),
+namespace termdraw {
+
+namespace graphics {
+
+Graphics::Graphics(setupFunc_t setup, updateFunc_t update)
+    : Capability(),
+      setup(setup),
+      update(update),
       _frameRate(DEFAULT_FRAME_RATE),
       pixelBufferAllocated(false),
       dimsSet(false) {
-  this->registerPreloop(std::bind(&GraphicsApplication::graphics_preloop, this, std::placeholders::_1, std::placeholders::_2));
-  this->registerLoop(std::bind(&GraphicsApplication::graphics_loop, this));
-  this->registerFinish(std::bind(&GraphicsApplication::graphics_finish, this, std::placeholders::_1));
+  // this->registerPreloop(std::bind(&Graphics::graphics_preloop, this, std::placeholders::_1, std::placeholders::_2));
+  // this->registerLoop(std::bind(&Graphics::graphics_loop, this));
+  // this->registerFinish(std::bind(&Graphics::graphics_finish, this, std::placeholders::_1));
 
 }
 
-// GraphicsApplication::~GraphicsApplication() {
+// Graphics::~Graphics() {
 //   // if (this->pixelBufferAllocated) {
 //   //   delete[] this->pixelBuffer;
 //   // }
 // }
 
 
-double GraphicsApplication::getFrameRate(void) const {
+double Graphics::getFrameRate(void) const {
   return _frameRate;
 }
 
-int GraphicsApplication::getWidth(void) const {
+int Graphics::getWidth(void) const {
   return _width;
 }
 
-int GraphicsApplication::getHeight(void) const {
+int Graphics::getHeight(void) const {
   return _height;
 }
 
-PixelBuffer& GraphicsApplication::getPixelBuffer(void) {
+PixelBuffer& Graphics::getPixelBuffer(void) {
   assert(this->pixelBufferAllocated && "Must allocate buffer before reading or writing!");
   // printf("accessed buffer!\n");
   return pixelBuffer;
 }
 
-void GraphicsApplication::allocate_buffers(void) {
+void Graphics::allocate_buffers(void) {
   this->pixelBuffer = PixelBuffer(WIDTH,HEIGHT);
   this->pixelBufferAllocated = true;
 
@@ -64,7 +70,7 @@ void GraphicsApplication::allocate_buffers(void) {
   assert(this->consoleBuffer != nullptr && "Failed to allocate console buffer for terminal drawing session!");
 }
 
-void GraphicsApplication::display_size(int width, int height) {
+void Graphics::display_size(int width, int height) {
   assert(!this->dimsSet && "Display cannot be set twice!");
   this->_width = width;
   this->_height = height;
@@ -82,34 +88,18 @@ inline struct winsize &getConsoleSize() {
   }
   return w;
 }
-void GraphicsApplication::display_size_based_on_console(int rowsToSave) {
+void Graphics::display_size_based_on_console(int rowsToSave) {
   struct winsize w = getConsoleSize();
   this->display_size(w.ws_col * WIDTH_SCALE, (w.ws_row - rowsToSave - 1) * HEIGHT_SCALE);
 }
 
-void GraphicsApplication::frameRate(double fr) {
+void Graphics::frameRate(double fr) {
   assert(fr > 0 && "Cannot use non-positive framerate!");
   _frameRate = fr;
   if (fr > MAX_FR_RECOMMENDATION) {
     printf("The provided frame rate %.2f may be too high! Recommended max: %.2f\n", fr, MAX_FR_RECOMMENDATION);
   }
 }
-
-std::vector<std::string> splitByDelimToCstr(std::string strToSplit, std::string delim) {
-  size_t pos_start = 0, pos_end, delim_len = delim.length();
-  std::string token;
-  std::vector<std::string> res;
-
-  while ((pos_end = strToSplit.find (delim, pos_start)) != std::string::npos) {
-    token = strToSplit.substr (pos_start, pos_end - pos_start);
-    pos_start = pos_end + delim_len;
-    res.push_back(token);
-  }
-
-  res.push_back(strToSplit.substr(pos_start));
-  return res;
-}
-
 
 
 inline char pixelsToBraille_offset1(PixBuf<WIDTH_SCALE,HEIGHT_SCALE> pixelGroup) {
@@ -119,7 +109,7 @@ inline char pixelsToBraille_offset1(PixBuf<WIDTH_SCALE,HEIGHT_SCALE> pixelGroup)
 inline char pixelsToBraille_offset2(PixBuf<WIDTH_SCALE,HEIGHT_SCALE> pixelGroup) {
   return pixelGroup(0,0) + (pixelGroup(0,1) << 1) + (pixelGroup(0,2) << 2) + (pixelGroup(1,0) << 3) + (pixelGroup(1,1) << 4) + (pixelGroup(1,2) << 5);
 }
-inline void GraphicsApplication::render(void) {
+inline void Graphics::render(void) {
   static char baseBraille[] = "\u2800";
   for (int y = 0; y < CONSOLE_HEIGHT; ++y) {
     for (int x = 0; x < CONSOLE_WIDTH; ++x) {
@@ -146,10 +136,10 @@ inline void GraphicsApplication::render(void) {
   fwrite(consoleBuffer, CONSOLE_LINE_SIZE, CONSOLE_HEIGHT, stdout);
 }
 
-void GraphicsApplication::clean(void) {
+void Graphics::clean(void) {
   pixelBuffer.setZero();
 }
-void GraphicsApplication::fill(pixelValue value) {
+void Graphics::fill(pixelValue value) {
   pixelBuffer.setConstant(value);
 }
 
@@ -170,8 +160,8 @@ static std::chrono::microseconds microSecDelay;
 
 static uint32_t framesComputed = 0;
 
-void GraphicsApplication::graphics_preloop(int argc, char *argv[]) {
-  // graphics_printf("run graphics preloop\n");
+void Graphics::graphics_preloop(int argc, char *argv[]) {
+  // graphics::printf("run graphics preloop\n");
   // signal(SIGINT, finish);
   // signal(SIGTERM, finish);
 
@@ -195,8 +185,8 @@ void GraphicsApplication::graphics_preloop(int argc, char *argv[]) {
   resetCursor();
 }
 
-void GraphicsApplication::graphics_loop(void) {
-  // graphics_printf("run graphics loop\n");
+void Graphics::graphics_loop(void) {
+  // graphics::printf("run graphics loop\n");
 
   // printf("call update!\n");
   update();
@@ -211,8 +201,8 @@ void GraphicsApplication::graphics_loop(void) {
   std::this_thread::sleep_until(t);
 }
 
-void GraphicsApplication::graphics_finish(int signum) {
-  // graphics_printf("run graphics finish\n");
+void Graphics::graphics_finish(int signum) {
+  // graphics::printf("run graphics finish\n");
   // if (signum) {
   //   std::cout << "Interrupt signal (" << signum << ") received.\n";
   // }
@@ -228,6 +218,22 @@ void GraphicsApplication::graphics_finish(int signum) {
 
   printf("\nRendering stats:\n\ttime computed:   \t|%9ld ms\n\ttime computing:   \t|%9ld ms\n\trendering ratio:\t|%9.3f\n", timeMsComputed, timeMsComputing, ratio);
 
+}
+
+
+std::vector<std::string> splitByDelimToCstr(std::string strToSplit, std::string delim) {
+  size_t pos_start = 0, pos_end, delim_len = delim.length();
+  std::string token;
+  std::vector<std::string> res;
+
+  while ((pos_end = strToSplit.find (delim, pos_start)) != std::string::npos) {
+    token = strToSplit.substr (pos_start, pos_end - pos_start);
+    pos_start = pos_end + delim_len;
+    res.push_back(token);
+  }
+
+  res.push_back(strToSplit.substr(pos_start));
+  return res;
 }
 
 void _graphics_print_string(std::string result) {
@@ -250,3 +256,7 @@ void _graphics_print_string(std::string result) {
     std::printf(formatString.c_str(), line.c_str());
   }
 }
+
+} // namespace graphics
+
+} // namespace termdraw

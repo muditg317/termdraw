@@ -4,7 +4,8 @@
 #include <Eigen/Eigen>
 #include <iostream>
 
-// void applyCachedData(ArrCompType &comparison, MatrixXb &onesMatrix, int minX, int minY, int maxX, int maxY);
+
+namespace termdraw {
 
 void applyCachedData(CacheablePixelData &mask, int minX, int minY, int maxX, int maxY, int dataMaxX, int dataMaxY, pixelValue value = WHITE) {
   if (minX > WIDTH-1 || maxX < 0 || minY > HEIGHT-1 || maxY < 0) {
@@ -36,8 +37,8 @@ void applyCachedData(CacheablePixelData &mask, int minX, int minY, int maxX, int
   ArrayCompType arrCmp = mask(Eigen::seq(dataMinX,dataMaxX),Eigen::seq(dataMinY,dataMaxY));
 
   if (bufferChunk.size() != arrCmp.size()) {
-    graphics_printf("pixels: <%d,%d> to <%d,%d>\n",minX,minY,maxX,maxY);
-    graphics_printf("data: <%d,%d> to <%d,%d>\n",dataMinX,dataMinY,dataMaxX,dataMaxY);
+    graphics::printf("pixels: <%d,%d> to <%d,%d>\n",minX,minY,maxX,maxY);
+    graphics::printf("data: <%d,%d> to <%d,%d>\n",dataMinX,dataMinY,dataMaxX,dataMaxY);
     std::cout << "buffer:" << bufferChunk.size() << "\n" << bufferChunk << std::endl;
     std::cout << "arrCmp:" << arrCmp.size() << "\n" << arrCmp << std::endl;
   }
@@ -50,7 +51,7 @@ void applyCachedData(CacheablePixelData &mask, int minX, int minY, int maxX, int
 
 static cachedDataMap<float> circleDataMap;
 void circle(Eigen::Vector2f center, float radius, pixelValue value) {
-  // graphics_printf("circle: <%.2f,%.2f> r=%.2f\n",center.x(),center.y(),radius);
+  // graphics::printf("circle: <%.2f,%.2f> r=%.2f\n",center.x(),center.y(),radius);
   int radCeil = (int) std::ceil(radius);
   int radCeil2p1 = radCeil * 2+1;
 
@@ -80,7 +81,7 @@ void circle(Eigen::Vector2f center, float radius, pixelValue value) {
 
 static cachedDataMap<std::pair<int,int>> rectDataMap;
 void rect(Eigen::Vector2f cornerTL, Eigen::Vector2f dimsWH, pixelValue value) {
-  // graphics_printf("rect: <%.2f,%.2f> d=<%.2f,%.2f>\n",cornerTL.x(),cornerTL.y(),dimsWH.x(),dimsWH.y());
+  // graphics::printf("rect: <%.2f,%.2f> d=<%.2f,%.2f>\n",cornerTL.x(),cornerTL.y(),dimsWH.x(),dimsWH.y());
 
   int w = std::ceil(dimsWH.x());
   int h = std::ceil(dimsWH.y());
@@ -101,9 +102,11 @@ void rect(Eigen::Vector2f cornerTL, Eigen::Vector2f dimsWH, pixelValue value) {
   int maxX = std::round(cornerTL.x()+dimsWH.x()-1);
   int maxY = std::round(cornerTL.y()+dimsWH.y()-1);
 
-  // graphics_printf("rect from <%d,%d> to <%d,%d>\n", minX, minY, maxX, maxY);
-  // graphics_printf("max inds: <%d,%d>\n", maxX-minX, maxY-minY);
-  // graphics_printf("chunk dims: <%d,%d>\n", rectMapIter->second.first.rows(), rectMapIter->second.first.cols());
+  // graphics::printf("rect from <%d,%d> to <%d,%d>\n", minX, minY, maxX, maxY);
+  // graphics::printf("max inds: <%d,%d>\n", maxX-minX, maxY-minY);
+  // graphics::printf("chunk dims: <%d,%d>\n", rectMapIter->second.first.rows(), rectMapIter->second.first.cols());
 
   applyCachedData(rectMapIter->second, minX, minY, maxX, maxY, maxX-minX, maxY-minY, value);
 }
+
+} // namespace graphics

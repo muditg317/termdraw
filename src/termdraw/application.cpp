@@ -3,8 +3,10 @@
 #include <cstdio>
 #include <csignal>
 
+namespace termdraw {
+
 static bool appCreated = false;
-Application::Application(void)
+ApplicationBase::ApplicationBase(void)
     : quit_application(false) {
   if (appCreated) {
     throw std::runtime_error("Application already exists!");
@@ -12,47 +14,47 @@ Application::Application(void)
   appCreated = true;
 }
 
-void Application::registerPreloop(std::function<preloopFunc> func) {
+void ApplicationBase::registerPreloop(std::function<preloopFunc> func) {
   this->preloopFunctionRegistry.registerFunction(func);
 }
 
-void Application::registerLoop(std::function<loopFunc> func) {
+void ApplicationBase::registerLoop(std::function<loopFunc> func) {
   this->loopFunctionRegistry.registerFunction(func);
 }
 
-void Application::registerFinish(std::function<finishFunc> func) {
+void ApplicationBase::registerFinish(std::function<finishFunc> func) {
   this->finishFunctionRegistry.registerFunction(func);
 }
 
-void Application::preloop(int argc, char *argv[]) {
+void ApplicationBase::preloop(int argc, char *argv[]) {
   this->preloopFunctionRegistry(argc, argv);
 }
 
-void Application::loop(void) {
+void ApplicationBase::loop(void) {
   this->loopFunctionRegistry();
 }
 
-void Application::finish(int signum) {
+void ApplicationBase::finish(int signum) {
   this->finishFunctionRegistry(signum);
   if (signum) {
     exit(signum);
   }
 }
 
-void Application::configure(void) {
+void ApplicationBase::configure(void) {
   this->lockRegistry();
   this->setupSignalHandlers();
 }
 
-void Application::lockRegistry(void) {
+void ApplicationBase::lockRegistry(void) {
   this->preloopFunctionRegistry.lock();
   this->loopFunctionRegistry.lock();
   this->finishFunctionRegistry.lock();
 }
 
-void Application::setupSignalHandlers(void) {
+void ApplicationBase::setupSignalHandlers(void) {
   struct sigaction signal_handler;
-  signal_handler.sa_handler = Application::staticSignalHandler;
+  signal_handler.sa_handler = ApplicationBase::staticSignalHandler;
   signal_handler.sa_flags = 0;
   sigemptyset(&signal_handler.sa_mask);
 
@@ -61,11 +63,11 @@ void Application::setupSignalHandlers(void) {
   sigaction(SIGUSR1, &signal_handler, nullptr);
 }
 
-void Application::staticSignalHandler(int signum) {
+void ApplicationBase::staticSignalHandler(int signum) {
   app->finish(signum);
 }
 
-int Application::run(int argc, char *argv[]) {
+int ApplicationBase::run(int argc, char *argv[]) {
   this->configure();
 
   preloop(argc, argv);
@@ -78,14 +80,17 @@ int Application::run(int argc, char *argv[]) {
   return 0;
 }
 
-void Application::quit(void) {
+void ApplicationBase::quit(void) {
   this->quit_application = true;
   raise(SIGUSR1);
 }
 
+
+} // namespace termdraw
+
 int main(int argc, char *argv[]) {
-  if (!app) {
+  if (!termdraw::app) {
     printf("APPLICATION NOT SETUP!\n");
   }
-  return app->run(argc, argv);
+  return termdraw::app->run(argc, argv);
 }

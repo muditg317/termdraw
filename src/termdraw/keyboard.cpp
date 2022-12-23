@@ -9,6 +9,11 @@
 #include <functional>
 #include <stdexcept>
 
+
+namespace termdraw {
+
+namespace keyboard {
+
 KeyPressEvent::KeyPressEvent(char byte) :
   c(byte),
   numBytes(1),
@@ -26,12 +31,12 @@ KeyPressEvent::KeyPressEvent(char *inputBytes, int incomingByteCount) :
   ctrl(false),
   alt(false),
   shift(false) {
-  // graphics_printf("read %d bytes from buffer!", numBytes);
+  // graphics::printf("read %d bytes from buffer!", numBytes);
   for (int i = 0; i < numBytes; i++) {
     allBytes[i] = inputBytes[i];
   }
   allBytes[numBytes] = 0;
-  // graphics_printf("Bytes (%d) read: %c\n",numBytes,*allBytes);
+  // graphics::printf("Bytes (%d) read: %c\n",numBytes,*allBytes);
   if (*allBytes == '\e') {
     processSpecialBytes();
   }
@@ -42,7 +47,7 @@ void KeyPressEvent::processSpecialBytes(void) {
   assert(*allBytes == '\e' && "Cannot process special bytes for non control sequence bytes!");
   if (numBytes == 1) { // just the '\e'
     specialKey = ESC;
-    // graphics_printf("Got ESC!\n");
+    // graphics::printf("Got ESC!\n");
     return;
   }
   if (allBytes[1] == '[') { // control sequence starts with '['
@@ -106,23 +111,24 @@ void KeyPressEvent::processSpecialBytes(void) {
   }
 }
 
-KeyboardGraphicsApplication::KeyboardGraphicsApplication()
-    : GraphicsApplication() {
-  this->registerPreloop(std::bind(&KeyboardGraphicsApplication::keyboard_preloop, this, std::placeholders::_1, std::placeholders::_2));
-  this->registerLoop(std::bind(&KeyboardGraphicsApplication::keyboard_loop, this));
-  this->registerFinish(std::bind(&KeyboardGraphicsApplication::keyboard_finish, this, std::placeholders::_1));
+Keyboard::Keyboard(keyPressHandlerFunc_t handler)
+  : Capability(),
+    keyPressHandler(handler) {
+  // this->registerPreloop(std::bind(&Keyboard::keyboard_preloop, this, std::placeholders::_1, std::placeholders::_2));
+  // this->registerLoop(std::bind(&Keyboard::keyboard_loop, this));
+  // this->registerFinish(std::bind(&Keyboard::keyboard_finish, this, std::placeholders::_1));
 }
 
-KeyboardGraphicsApplication::~KeyboardGraphicsApplication() {}
+Keyboard::~Keyboard() {}
 
-// void KeyboardGraphicsApplication::setupRegistryFuncs(void) {
-//   GraphicsApplication::setupRegistryFuncs();
+// void Keyboard::setupRegistryFuncs(void) {
+//   Graphics::setupRegistryFuncs();
 // }
 
 
 static struct termios oldSettings, newSettings;
 
-void KeyboardGraphicsApplication::keyboard_preloop(int argc, char *argv[]) {
+void Keyboard::keyboard_preloop(int argc, char *argv[]) {
   tcgetattr(STDIN_FILENO, &oldSettings );
   newSettings = oldSettings;
   newSettings.c_lflag &= (~ICANON & ~ECHO);
@@ -130,14 +136,14 @@ void KeyboardGraphicsApplication::keyboard_preloop(int argc, char *argv[]) {
 }
 
 
-void KeyboardGraphicsApplication::keyboard_loop(void) {
+void Keyboard::keyboard_loop(void) {
   static int n = 0;
   while (ioctl(STDIN_FILENO, FIONREAD, &n) == 0 && n > 0) {
     assert(n <= MAX_INPUT_BYTES && "Cannot buffer more than MAX_INPUT_BYTES characters! must input slower");
     static char buffer[MAX_INPUT_BYTES];
     for (int i = 0; i < n; i++) {
       buffer[i] = fgetc(stdin);
-      // graphics_printf("read byte: %c|%d\n", buffer[i], buffer[i]);
+      // graphics::printf("read byte: %c|%d\n", buffer[i], buffer[i]);
     }
     int controlSeqStart = -1;
     int controlSeqEnd = -1;
@@ -154,14 +160,14 @@ void KeyboardGraphicsApplication::keyboard_loop(void) {
           controlSeqEnd = i;
         }
         if (controlSeqEnd != -1) {
-          // graphics_printf("end control sequence! %d", controlSeqEnd);
+          // graphics::printf("end control sequence! %d", controlSeqEnd);
           this->keyPressHandler(KeyPressEvent(buffer + controlSeqStart, controlSeqEnd - controlSeqStart + 1));
           controlSeqStart = -1;
           controlSeqEnd = -1;
         }
       } else if (buffer[i] == '\e') {
         controlSeqStart = i;
-        // graphics_printf("start control sequence! %d", i);
+        // graphics::printf("start control sequence! %d", i);
       } else if (controlSeqStart == -1) {
         this->keyPressHandler(KeyPressEvent(buffer[i]));
       }
@@ -173,7 +179,11 @@ void KeyboardGraphicsApplication::keyboard_loop(void) {
   }
 }
 
-void KeyboardGraphicsApplication::keyboard_finish(int signum) {
-  graphics_printf("Reset terminal settings!");
+void Keyboard::keyboard_finish(int signum) {
+  graphics::printf("Reset terminal settings!");
   tcsetattr(STDIN_FILENO, TCSANOW, &oldSettings );
 }
+
+} // namespace keyboard
+
+} // namespace graphics

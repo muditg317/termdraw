@@ -34,8 +34,8 @@ endif()
 find_package(fmt CONFIG REQUIRED)
 message(STATUS "fmt::fmt version: ${fmt_VERSION}")# Adds fmt::fmt
 # Adds Boost::filesystem
-find_package(Boost REQUIRED)
-message(STATUS "Boost::boost version: ${Boost_VERSION}")# Adds Boost::boost
+# find_package(Boost REQUIRED)
+# message(STATUS "Boost::boost version: ${Boost_VERSION}")# Adds Boost::boost
 
 # The compiled library code is here
 add_subdirectory(src)

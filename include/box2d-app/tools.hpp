@@ -1,13 +1,17 @@
-#ifndef BOX2d_APP_TOOLS_HPP
-#define BOX2d_APP_TOOLS_HPP
+#pragma once
 
 #include <random>
 
 #include <box2d/box2d.h>
 
 #define PIXELS_PER_METER 15.0f
-#define WORLD_WIDTH (WIDTH/PIXELS_PER_METER)
-#define WORLD_HEIGHT (HEIGHT/PIXELS_PER_METER)
+#define METER_TO_PIXELS(m) (m*PIXELS_PER_METER)
+#define PIXELS_TO_METER(p) (p/PIXELS_PER_METER)
+
+#define WORLD_WIDTH PIXELS_TO_METER(WIDTH)
+#define WORLD_HEIGHT PIXELS_TO_METER(HEIGHT)
+
+namespace physics {
 
 struct BoundingBox {
   b2Body *bottomWall;
@@ -43,4 +47,4 @@ void drawCircleBody(b2Body *circleBody);
 
 void drawRectBody(b2Body *rectBody);
 
-#endif
+} // namespace physics
