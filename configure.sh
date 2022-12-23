@@ -4,6 +4,11 @@ build_type=RelWithDebInfo
 build_type=Debug
 build_type=Release
 
+if [ -z "$VCPKG_ROOT" ]; then
+    echo "VCPKG_ROOT not set"
+    exit 1
+fi
+
 _cmake=$(command -v cmake)
 if [ -z "$_cmake" ]; then
     echo "cmake not found"
