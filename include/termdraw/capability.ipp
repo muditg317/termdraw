@@ -20,7 +20,9 @@ void Capability<Dependencies...>::buildDependency(std::tuple<Args...> args) {
 template<class... Dependencies>
 template<typename... DependencyArgGroups>
 Capability<Dependencies...>::Capability(DependencyArgGroups&&... dependencyArgs) {
-  if constexpr (sizeof...(DependencyArgGroups) > 0) {
+  if constexpr (sizeof...(DependencyArgGroups) == 0) {
+    (buildDependency<Dependencies>(std::make_tuple()), ...);
+  } else {
     (buildDependency<Dependencies>(std::forward<DependencyArgGroups>(dependencyArgs)), ...);
   }
   // app.registerCapability<Capability<Dependencies...>>(this);

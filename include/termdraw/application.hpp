@@ -54,14 +54,14 @@ class ApplicationBase {
 
 // function registry
  protected:
-  void registerPreloop(std::function<preloopFunc>);
-  void registerLoop(std::function<loopFunc>);
-  void registerFinish(std::function<finishFunc>);
+  void registerPreloop(std::function<CapabilityBase::preloopFunc>);
+  void registerLoop(std::function<CapabilityBase::loopFunc>);
+  void registerFinish(std::function<CapabilityBase::finishFunc>);
  private:
   void lockRegistry(void);
-  FunctionRegistry<preloopFunc> preloopFunctionRegistry;
-  FunctionRegistry<loopFunc> loopFunctionRegistry;
-  FunctionRegistry<finishFunc> finishFunctionRegistry;
+  FunctionRegistry<CapabilityBase::preloopFunc> preloopFunctionRegistry;
+  FunctionRegistry<CapabilityBase::loopFunc> loopFunctionRegistry;
+  FunctionRegistry<CapabilityBase::finishFunc> finishFunctionRegistry;
 };
 
 template<class... Capabilities>

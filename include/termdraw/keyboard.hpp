@@ -61,17 +61,20 @@ class Keyboard : public Capability<> {
   typedef std::function<void(KeyPressEvent)> keyPressHandlerFunc_t;
 
  public:
+  static constexpr const char *NAME = "keyboard";
+  std::string name() const override { return NAME; };
+
+
   Keyboard(keyPressHandlerFunc_t);
   ~Keyboard();
-
  protected:
   // virtual void keyPressHandler(KeyPressEvent) = 0;
   keyPressHandlerFunc_t keyPressHandler;
 
  private:
-  preloopFunc preloop override;
-  loopFunc loop override;
-  finishFunc finish override;
+  CapabilityBase::preloopFunc preloop override;
+  CapabilityBase::loopFunc loop override;
+  CapabilityBase::finishFunc finish override;
 
   // int keyboard_main(int argc, char *argv[]);
 };

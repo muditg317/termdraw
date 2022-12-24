@@ -36,6 +36,7 @@ Graphics::Graphics(setupFunc_t setup, updateFunc_t update)
   // this->registerPreloop(std::bind(&Graphics::preloop, this, std::placeholders::_1, std::placeholders::_2));
   // this->registerLoop(std::bind(&Graphics::loop, this));
   // this->registerFinish(std::bind(&Graphics::finish, this, std::placeholders::_1));
+  // std::cout << "Graphics constructor" << std::endl;
 
 }
 

@@ -33,15 +33,15 @@ void ApplicationBase::registerCapsAndDeps(std::vector<std::shared_ptr<Capability
 }
 
 
-void ApplicationBase::registerPreloop(std::function<preloopFunc> func) {
+void ApplicationBase::registerPreloop(std::function<CapabilityBase::preloopFunc> func) {
   this->preloopFunctionRegistry.registerFunction(func);
 }
 
-void ApplicationBase::registerLoop(std::function<loopFunc> func) {
+void ApplicationBase::registerLoop(std::function<CapabilityBase::loopFunc> func) {
   this->loopFunctionRegistry.registerFunction(func);
 }
 
-void ApplicationBase::registerFinish(std::function<finishFunc> func) {
+void ApplicationBase::registerFinish(std::function<CapabilityBase::finishFunc> func) {
   this->finishFunctionRegistry.registerFunction(func);
 }
 

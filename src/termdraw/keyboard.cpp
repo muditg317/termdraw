@@ -2,6 +2,7 @@
 #include <termdraw/keyboard.hpp>
 
 #include <unistd.h>
+#include <iostream>
 #include <csignal>
 #include <sys/ioctl.h>
 #include <cctype>
@@ -117,6 +118,7 @@ Keyboard::Keyboard(keyPressHandlerFunc_t handler)
   // this->registerPreloop(std::bind(&Keyboard::preloop, this, std::placeholders::_1, std::placeholders::_2));
   // this->registerLoop(std::bind(&Keyboard::loop, this));
   // this->registerFinish(std::bind(&Keyboard::finish, this, std::placeholders::_1));
+  // std::cout << "Keyboard constructor" << std::endl;
 }
 
 Keyboard::~Keyboard() {}

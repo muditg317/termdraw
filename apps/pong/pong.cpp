@@ -1,7 +1,7 @@
 #include <pong.hpp>
 
-// #define KEYBOARD_MAIN
 #include <termdraw/application.hpp>
+#include <termdraw/capability.hpp>
 #include <termdraw/graphics.hpp>
 #include <termdraw/keyboard.hpp>
 #include <termdraw/shapes.hpp>
@@ -32,7 +32,7 @@
 #define PADDLE_SPEED (PADDLE_WIDTH * 0.5f)
 
 Pong::Pong()
-  : Capability(
+  : DependentCapability(
       std::make_tuple(
         std::bind(&Pong::setup, this, std::placeholders::_1, std::placeholders::_2),
         std::bind(&Pong::update, this)
@@ -40,6 +40,7 @@ Pong::Pong()
       std::make_tuple(
         std::bind(&Pong::keyPressHandler, this, std::placeholders::_1)
       )) {
+  // std::cout << "Pong constructor" << std::endl;
 }
 
 b2Vec2 gravity(0.0f, 0.0f);

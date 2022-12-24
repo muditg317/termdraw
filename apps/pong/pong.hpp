@@ -4,8 +4,11 @@
 #include <termdraw/graphics.hpp>
 #include <termdraw/keyboard.hpp>
 
-class Pong : public termdraw::Capability<termdraw::graphics::Graphics,termdraw::keyboard::Keyboard> {
+class Pong : public termdraw::DependentCapability<termdraw::graphics::Graphics,termdraw::keyboard::Keyboard> {
  public:
+  static constexpr const char *NAME = "pong";
+  std::string name() const override { return NAME; };
+
   Pong();
 
  protected:

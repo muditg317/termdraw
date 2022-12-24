@@ -22,8 +22,6 @@ typedef PIX_BUF_MATRIX_T pixelValue;
 constexpr pixelValue WHITE = 1;
 constexpr pixelValue BLACK = 0;
 
-#define GRAPHICS_CAPABILITY_NAME "graphics"
-
 
 #define APP_GRAPHICS (termdraw::app->getCapability<termdraw::graphics::Graphics>())
 
@@ -65,6 +63,9 @@ class Graphics : public Capability<> {
   typedef std::function<void(void)> updateFunc_t;
 
  public:
+  static constexpr const char *NAME = "graphics";
+  std::string name() const override { return NAME; };
+
   Graphics(setupFunc_t, updateFunc_t);
   // virtual ~Graphics();
 
