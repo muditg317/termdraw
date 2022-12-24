@@ -21,7 +21,7 @@ void ApplicationBase::registerCapability(std::shared_ptr<Capability> capability)
     capability->name(),
     capability
   ));
-  std::cout << "Registered capability: " << capability->name() << std::endl;
+  // std::cout << "Registered capability: " << capability->name() << std::endl;
   
   // if Capability has preloop member function, register it
   if constexpr (std::is_member_function_pointer<decltype(&Capability::preloop)>::value) {

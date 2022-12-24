@@ -76,7 +76,6 @@ class Keyboard : public Capability<> {
   CapabilityBase::loopFunc loop override;
   CapabilityBase::finishFunc finish override;
 
-  // int keyboard_main(int argc, char *argv[]);
 };
 
 } // namespace keyboard

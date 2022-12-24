@@ -7,6 +7,7 @@
 #include <vector>
 
 namespace termdraw {
+namespace shapes {
 
 typedef Eigen::Array<bool, Eigen::Dynamic, Eigen::Dynamic> ArrayCompType;
 typedef Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> MatrixXb;
@@ -43,5 +44,6 @@ inline void rect(float x, float y, float w, float h, pixelValue value = WHITE) {
   return rect(Eigen::Vector2f(x,y), Eigen::Vector2f(w,h), value);
 }
 
+} // namespace shapes
 
 } // namespace termdraw

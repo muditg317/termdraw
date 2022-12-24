@@ -76,7 +76,7 @@ void drawCircleBody(b2Body *circleBody) {
   }
   b2Vec2 pos = circleBody->GetPosition();
   float rad = fixture->GetShape()->m_radius;
-  termdraw::circle(pos.x*PIXELS_PER_METER,pos.y*PIXELS_PER_METER, rad*PIXELS_PER_METER);
+  termdraw::shapes::circle(pos.x*PIXELS_PER_METER,pos.y*PIXELS_PER_METER, rad*PIXELS_PER_METER);
 }
 
 void drawRectBody(b2Body *rectBody) {
@@ -92,7 +92,7 @@ void drawRectBody(b2Body *rectBody) {
   fixture->GetShape()->ComputeAABB(&bounds, transform, 0);
   b2Vec2 corner = pos + bounds.lowerBound;
   b2Vec2 dims = 2 * bounds.GetExtents();
-  termdraw::rect(corner.x*PIXELS_PER_METER, corner.y*PIXELS_PER_METER, dims.x*PIXELS_PER_METER, dims.y*PIXELS_PER_METER);
+  termdraw::shapes::rect(corner.x*PIXELS_PER_METER, corner.y*PIXELS_PER_METER, dims.x*PIXELS_PER_METER, dims.y*PIXELS_PER_METER);
 }
 
 } // namespace physics

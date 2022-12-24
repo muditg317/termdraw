@@ -137,6 +137,7 @@ inline void Graphics::render(void) {
     consoleBuffer[CONSOLE_LINE_SIZE*(y+1) - 1] = '\n';
   }
   fwrite(consoleBuffer, CONSOLE_LINE_SIZE, CONSOLE_HEIGHT, stdout);
+  fflush(stdout);
 }
 
 void Graphics::clean(void) {
@@ -151,8 +152,9 @@ void Graphics::fill(pixelValue value) {
  * Clear the rest of any printed lines so the screen isn't duplicated
  */
 inline void resetCursor(void) {
-  printf("\x1b[%dD", CONSOLE_WIDTH);
-  printf("\x1b[%dA", CONSOLE_HEIGHT);
+  // printf("\x1b[%dD", CONSOLE_WIDTH);
+  // printf("\x1b[%dA", CONSOLE_HEIGHT);
+  std::printf("\x1B[%dF", CONSOLE_HEIGHT);
   // getCursorPos(&lastCursorX,&lastCursorY);
 }
 
@@ -173,7 +175,7 @@ void Graphics::preloop(int argc, char *argv[]) {
   this->setup(argc, argv);
   assert(this->dimsSet && "Must set dimensions for terminal drawing session! Call `display_size(width,height)`");
   
-  printf("Finished termdraw setup!\n\tScreen:    \t%-3dx%3d\n\tConsole:\t%-3dx%3d\n\tFrame Rate:\t%.2f\n", WIDTH, HEIGHT, CONSOLE_WIDTH, CONSOLE_HEIGHT, FRAME_RATE);
+  std::printf("Finished termdraw setup!\n\tScreen:    \t%-3dx%3d\n\tConsole:\t%-3dx%3d\n\tFrame Rate:\t%.2f\n", WIDTH, HEIGHT, CONSOLE_WIDTH, CONSOLE_HEIGHT, FRAME_RATE);
 
   // printf("&pixelBuffer = %p\n", &pixelBuffer);
   // printf("&consoleBuffer = %p\n", &consoleBuffer);
@@ -191,11 +193,11 @@ void Graphics::preloop(int argc, char *argv[]) {
 void Graphics::loop(void) {
   // graphics::printf("run graphics loop\n");
 
-  // printf("call update!\n");
+  // std::printf("call update!\n");
   update();
-  // printf("call render!\n");
+  // std::printf("call render!\n");
   render();
-  // printf("call reset!\n");
+  // std::printf("call reset!\n");
   resetCursor();
 
   framesComputed++;
@@ -219,7 +221,7 @@ void Graphics::finish(int signum) {
 
   double ratio = ((float)timeMsComputed)/((float)timeMsComputing);
 
-  printf("\nRendering stats:\n\ttime computed:   \t|%9ld ms\n\ttime computing:   \t|%9ld ms\n\trendering ratio:\t|%9.3f\n", timeMsComputed, timeMsComputing, ratio);
+  std::printf("\nRendering stats:\n\ttime computed:   \t|%9ld ms\n\ttime computing:   \t|%9ld ms\n\trendering ratio:\t|%9.3f\n", timeMsComputed, timeMsComputing, ratio);
 
 }
 
@@ -253,7 +255,9 @@ void _graphics_print_string(std::string result) {
       if (line.size() == 0) {
         return;
       }
-      formatString = formatString.substr(0, formatString.size()-1); // remove \n
+      if (line != resLines.front()) {
+        formatString = formatString.substr(0, formatString.size()-1); // remove \n
+      }
     }
     // std::cout << "internal printer -- format: " << formatString << std::endl;
     std::printf(formatString.c_str(), line.c_str());

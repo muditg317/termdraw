@@ -6,6 +6,7 @@
 
 
 namespace termdraw {
+namespace shapes {
 
 void applyCachedData(CacheablePixelData &mask, int minX, int minY, int maxX, int maxY, int dataMaxX, int dataMaxY, pixelValue value = WHITE) {
   if (minX > WIDTH-1 || maxX < 0 || minY > HEIGHT-1 || maxY < 0) {
@@ -75,7 +76,7 @@ void circle(Eigen::Vector2f center, float radius, pixelValue value) {
   int maxX = int(center.x())+radCeil;
   int maxY = int(center.y())+radCeil;
 
-  // printf("circle: <%.2f,%.2f> r=%.2f\n",center.x(),center.y(),radius);
+  // graphics::printf("circle: <%.2f,%.2f> r=%.2f\n",center.x(),center.y(),radius);
   applyCachedData(circleMapIter->second, minX, minY, maxX, maxY, radCeil2p1-1,radCeil2p1-1, value);
 }
 
@@ -109,4 +110,5 @@ void rect(Eigen::Vector2f cornerTL, Eigen::Vector2f dimsWH, pixelValue value) {
   applyCachedData(rectMapIter->second, minX, minY, maxX, maxY, maxX-minX, maxY-minY, value);
 }
 
+} // namespace shapes
 } // namespace graphics
