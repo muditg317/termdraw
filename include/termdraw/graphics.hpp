@@ -26,7 +26,6 @@ constexpr pixelValue BLACK = 0;
 
 
 #define APP_GRAPHICS (termdraw::app->getCapability<termdraw::graphics::Graphics>())
-#define GRAPHICS (getCapability<termdraw::graphics::Graphics>())
 
 // double getFrameRate();
 #define FRAME_RATE (APP_GRAPHICS.getFrameRate())
@@ -60,7 +59,7 @@ namespace termdraw {
 
 namespace graphics {
 
-class Graphics : public Capability {
+class Graphics : public Capability<> {
 
   typedef std::function<void(int, char **)> setupFunc_t;
   typedef std::function<void(void)> updateFunc_t;
@@ -117,9 +116,9 @@ class Graphics : public Capability {
   void allocate_buffers(void);
   void render(void);
 
-  preloopFunc graphics_preloop;
-  loopFunc graphics_loop;
-  finishFunc graphics_finish;
+  preloopFunc preloop override;
+  loopFunc loop override;
+  finishFunc finish override;
 
   double _frameRate;
   int _width;

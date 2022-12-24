@@ -1,16 +1,9 @@
 #pragma once
 
+#include <memory>
+#include <vector>
+
 namespace termdraw {
-
-template<class... Capabilities>
-template<typename... Tuples>
-Application<Capabilities...>::Application(Tuples&&... tuples) { // : capabilities(std::forward<Tuples>(tuples)...) {
-  // this->capabilities = std::make_tuple(Capabilities()...);
-  // for (auto &capability : this->capabilities) {
-  //   capability.setup();
-  // }
-}
-
 
 template<class Capability>
 Capability& ApplicationBase::getCapability(void) {
@@ -21,13 +14,33 @@ Capability& ApplicationBase::getCapability(void) {
   return *std::static_pointer_cast<Capability>(capability->second);
 }
 
-
 template<class Capability>
-void ApplicationBase::addCapability(void) {
+void ApplicationBase::registerCapability(std::shared_ptr<Capability> capability) {
   this->capabilities.emplace(std::make_pair(
     typeid(Capability).name(),
-    std::make_shared<Capability>()
+    capability
   ));
+  registerPreloop(std::bind(&Capability::preloop, capability.get(), std::placeholders::_1, std::placeholders::_2));
+  registerLoop(std::bind(&Capability::loop, capability.get()));
+  registerFinish(std::bind(&Capability::finish, capability.get(), std::placeholders::_1));
+}
+
+
+template<class Capability,
+         class... Args,
+         std::enable_if_t<std::is_constructible<Capability, Args&&...>::value, int> = 0>
+inline void buildCapability(std::vector<std::shared_ptr<CapabilityBase>>& capsList, std::tuple<Args...> args) {
+  capsList.push_back(std::make_shared<Capability>(std::forward<Args>(std::get<Args>(args))...));
+}
+
+template<class... Capabilities>
+template<typename... Tuples>
+Application<Capabilities...>::Application(Tuples&&... tuples) {
+  std::vector<std::shared_ptr<CapabilityBase>> capPtrs;
+  if constexpr (sizeof...(Tuples) > 0) {
+    (buildCapability<Capabilities>(capPtrs, std::forward<Tuples>(tuples)), ...);
+  }
+  this->registerCapsAndDeps(capPtrs);
 }
 
 } // namespace termdraw

@@ -4,7 +4,7 @@
 #include <termdraw/graphics.hpp>
 #include <termdraw/keyboard.hpp>
 
-class Pong : public termdraw::Application<termdraw::graphics::Graphics,termdraw::keyboard::Keyboard> {
+class Pong : public termdraw::Capability<termdraw::graphics::Graphics,termdraw::keyboard::Keyboard> {
  public:
   Pong();
 

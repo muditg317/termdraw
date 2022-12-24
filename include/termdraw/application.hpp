@@ -1,5 +1,4 @@
-#ifndef APPLICATION_HPP
-#define APPLICATION_HPP
+#pragma once
 
 #include <termdraw/base.hpp>
 #include <termdraw/capability.hpp>
@@ -12,9 +11,10 @@
 #include <tuple>
 #include <type_traits>
 
-#define DEFINE_APPLICATION(APP) \
-  std::shared_ptr<termdraw::ApplicationBase> termdraw::app = std::make_shared<APP>();
+#define APP (termdraw::app)
 
+#define DEFINE_APPLICATION(...) \
+  std::shared_ptr<termdraw::ApplicationBase> termdraw::app = std::make_shared<termdraw::Application<__VA_ARGS__>>();
 
 namespace termdraw {
 
@@ -24,7 +24,7 @@ class ApplicationBase {
  public:
   ApplicationBase();
   int run(int argc, char *argv[]);
- protected:
+//  protected:
   void quit(void);
  private:
   bool quit_application;
@@ -34,10 +34,12 @@ class ApplicationBase {
   template<class Capability>
   Capability& getCapability(void);
  protected:
-  template<class Capability>
-  void addCapability(void);
+  void registerCapsAndDeps(std::vector<std::shared_ptr<CapabilityBase>>& capPtrs);
  private:
-  std::map<std::string, std::shared_ptr<Capability>> capabilities;
+  template<class Capability>
+  void registerCapability(std::shared_ptr<Capability>);
+
+  std::map<std::string, std::shared_ptr<CapabilityBase>> capabilities;
 
 // inner workings
  protected:
@@ -64,17 +66,16 @@ class ApplicationBase {
 
 template<class... Capabilities>
 class Application : public ApplicationBase {
- static_assert(std::conjunction_v<std::is_base_of<Capability, Capabilities>...>,
-               "All template parameters must be derived from Capability");
+ static_assert(std::conjunction_v<std::is_base_of<CapabilityBase, Capabilities>...>,
+               "All Application template parameters must be derived from CapabilityBase");
  public:
  // take in tuple for args to each capability
   template<typename... Tuples>
   Application(Tuples&&... tuples);
+
 };
 
 extern std::shared_ptr<ApplicationBase> app;
 } // namespace termdraw
 
 #include <termdraw/application.ipp>
-
-#endif

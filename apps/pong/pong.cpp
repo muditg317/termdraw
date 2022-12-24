@@ -32,7 +32,7 @@
 #define PADDLE_SPEED (PADDLE_WIDTH * 0.5f)
 
 Pong::Pong()
-  : Application(
+  : Capability(
       std::make_tuple(
         std::bind(&Pong::setup, this, std::placeholders::_1, std::placeholders::_2),
         std::bind(&Pong::update, this)
@@ -114,7 +114,7 @@ void Pong::keyPressHandler(termdraw::keyboard::KeyPressEvent event) {
   char c = event.c;
   if (c=='q') {
     termdraw::graphics::printf("quit!\n");
-    this->quit();
+    APP->quit();
   }
   if (c == 'r') {
     termdraw::graphics::printf("reset!\n");
@@ -139,10 +139,10 @@ void Pong::keyPressHandler(termdraw::keyboard::KeyPressEvent event) {
 }
 
 void Pong::setup(int argc, char *argv[]) {
-  GRAPHICS.display_size_based_on_console(5);
+  APP_GRAPHICS.display_size_based_on_console(5);
   // display_size(256,128);
 
-  GRAPHICS.frameRate(60);
+  APP_GRAPHICS.frameRate(60);
   world.SetAllowSleeping(true);
   world.SetContinuousPhysics(true);
   world.SetContactListener(&pongContactListener);
@@ -155,7 +155,7 @@ void startGame(void) {
 }
 
 void Pong::update() {
-  GRAPHICS.clean();
+  APP_GRAPHICS.clean();
 
   if (state == START) {
     startGame();

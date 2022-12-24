@@ -14,6 +14,25 @@ ApplicationBase::ApplicationBase(void)
   appCreated = true;
 }
 
+void ApplicationBase::registerCapsAndDeps(std::vector<std::shared_ptr<CapabilityBase>>& capPtrs) {
+  std::vector<std::shared_ptr<CapabilityBase>> allCaps;
+  while (capPtrs.size() > 0) {
+    auto capability = capPtrs.back();
+    capPtrs.pop_back();
+    allCaps.push_back(capability);
+    auto deps = capability->loadDependencies();
+    for (auto& dep : deps) {
+      if (std::find(allCaps.begin(), allCaps.end(), dep) == allCaps.end()) {
+        capPtrs.push_back(dep);
+      }
+    }
+  }
+  for (auto it = allCaps.rbegin(); it != allCaps.rend(); ++it) {
+    registerCapability(*it);
+  }
+}
+
+
 void ApplicationBase::registerPreloop(std::function<preloopFunc> func) {
   this->preloopFunctionRegistry.registerFunction(func);
 }

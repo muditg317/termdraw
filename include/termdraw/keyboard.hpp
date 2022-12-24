@@ -56,7 +56,7 @@ typedef struct KeyPressEvent {
 } KeyPressEvent;
 
 
-class Keyboard : public Capability {
+class Keyboard : public Capability<> {
 
   typedef std::function<void(KeyPressEvent)> keyPressHandlerFunc_t;
 
@@ -69,11 +69,11 @@ class Keyboard : public Capability {
   keyPressHandlerFunc_t keyPressHandler;
 
  private:
-  void keyboard_preloop(int argc, char *argv[]);
-  void keyboard_loop(void);
-  void keyboard_finish(int signum=0);
+  preloopFunc preloop override;
+  loopFunc loop override;
+  finishFunc finish override;
 
-  int keyboard_main(int argc, char *argv[]);
+  // int keyboard_main(int argc, char *argv[]);
 };
 
 } // namespace keyboard

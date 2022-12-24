@@ -114,9 +114,9 @@ void KeyPressEvent::processSpecialBytes(void) {
 Keyboard::Keyboard(keyPressHandlerFunc_t handler)
   : Capability(),
     keyPressHandler(handler) {
-  // this->registerPreloop(std::bind(&Keyboard::keyboard_preloop, this, std::placeholders::_1, std::placeholders::_2));
-  // this->registerLoop(std::bind(&Keyboard::keyboard_loop, this));
-  // this->registerFinish(std::bind(&Keyboard::keyboard_finish, this, std::placeholders::_1));
+  // this->registerPreloop(std::bind(&Keyboard::preloop, this, std::placeholders::_1, std::placeholders::_2));
+  // this->registerLoop(std::bind(&Keyboard::loop, this));
+  // this->registerFinish(std::bind(&Keyboard::finish, this, std::placeholders::_1));
 }
 
 Keyboard::~Keyboard() {}
@@ -128,7 +128,7 @@ Keyboard::~Keyboard() {}
 
 static struct termios oldSettings, newSettings;
 
-void Keyboard::keyboard_preloop(int argc, char *argv[]) {
+void Keyboard::preloop(int argc, char *argv[]) {
   tcgetattr(STDIN_FILENO, &oldSettings );
   newSettings = oldSettings;
   newSettings.c_lflag &= (~ICANON & ~ECHO);
@@ -136,7 +136,7 @@ void Keyboard::keyboard_preloop(int argc, char *argv[]) {
 }
 
 
-void Keyboard::keyboard_loop(void) {
+void Keyboard::loop(void) {
   static int n = 0;
   while (ioctl(STDIN_FILENO, FIONREAD, &n) == 0 && n > 0) {
     assert(n <= MAX_INPUT_BYTES && "Cannot buffer more than MAX_INPUT_BYTES characters! must input slower");
@@ -179,7 +179,7 @@ void Keyboard::keyboard_loop(void) {
   }
 }
 
-void Keyboard::keyboard_finish(int signum) {
+void Keyboard::finish(int signum) {
   graphics::printf("Reset terminal settings!");
   tcsetattr(STDIN_FILENO, TCSANOW, &oldSettings );
 }

@@ -1,5 +1,7 @@
 #include <termdraw/graphics.hpp>
 
+#include <termdraw/application.hpp>
+
 #include <cstdio>
 // #include <termios.h>
 #include <sys/ioctl.h>
@@ -31,9 +33,9 @@ Graphics::Graphics(setupFunc_t setup, updateFunc_t update)
       _frameRate(DEFAULT_FRAME_RATE),
       pixelBufferAllocated(false),
       dimsSet(false) {
-  // this->registerPreloop(std::bind(&Graphics::graphics_preloop, this, std::placeholders::_1, std::placeholders::_2));
-  // this->registerLoop(std::bind(&Graphics::graphics_loop, this));
-  // this->registerFinish(std::bind(&Graphics::graphics_finish, this, std::placeholders::_1));
+  // this->registerPreloop(std::bind(&Graphics::preloop, this, std::placeholders::_1, std::placeholders::_2));
+  // this->registerLoop(std::bind(&Graphics::loop, this));
+  // this->registerFinish(std::bind(&Graphics::finish, this, std::placeholders::_1));
 
 }
 
@@ -160,7 +162,7 @@ static std::chrono::microseconds microSecDelay;
 
 static uint32_t framesComputed = 0;
 
-void Graphics::graphics_preloop(int argc, char *argv[]) {
+void Graphics::preloop(int argc, char *argv[]) {
   // graphics::printf("run graphics preloop\n");
   // signal(SIGINT, finish);
   // signal(SIGTERM, finish);
@@ -185,7 +187,7 @@ void Graphics::graphics_preloop(int argc, char *argv[]) {
   resetCursor();
 }
 
-void Graphics::graphics_loop(void) {
+void Graphics::loop(void) {
   // graphics::printf("run graphics loop\n");
 
   // printf("call update!\n");
@@ -201,7 +203,7 @@ void Graphics::graphics_loop(void) {
   std::this_thread::sleep_until(t);
 }
 
-void Graphics::graphics_finish(int signum) {
+void Graphics::finish(int signum) {
   // graphics::printf("run graphics finish\n");
   // if (signum) {
   //   std::cout << "Interrupt signal (" << signum << ") received.\n";

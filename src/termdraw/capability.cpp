@@ -1,7 +1,9 @@
 #include <termdraw/capability.hpp>
 
+#include <termdraw/application.hpp>
+
 namespace termdraw {
 
-Capability::Capability() {}
+CapabilityBase::CapabilityBase() {}
 
 } // namespace termdraw
