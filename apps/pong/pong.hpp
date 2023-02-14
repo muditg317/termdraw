@@ -3,6 +3,16 @@
 #include <termdraw/application.hpp>
 #include <termdraw/graphics.hpp>
 #include <termdraw/keyboard.hpp>
+#include <box2d-app/tools.hpp>
+
+#include <box2d/box2d.h>
+
+enum GameState {
+  IDLE,
+  START,
+  RUNNING,
+  OVER
+};
 
 class Pong : public termdraw::DependentCapability<termdraw::graphics::Graphics,termdraw::keyboard::Keyboard> {
  public:
@@ -10,6 +20,16 @@ class Pong : public termdraw::DependentCapability<termdraw::graphics::Graphics,t
   std::string name() const override { return NAME; };
 
   Pong();
+
+ private:
+  b2Vec2 gravity;
+  b2World world;
+
+  b2Body *ball;
+  b2Body *paddle;
+  int score;
+  GameState state;
+  physics::BoundingBox boundingBox;
 
  protected:
   /**
@@ -23,6 +43,16 @@ class Pong : public termdraw::DependentCapability<termdraw::graphics::Graphics,t
   void update(void);
 
   void keyPressHandler(termdraw::keyboard::KeyPressEvent);
+
+ private:
+  void endGame(void);
+
+  void onBallHit(void);
+  void onBallMissed(void);
+  physics::GenericContactListener pongContactListener;
+
+  void reset(void);
+  void startGame(void);
 };
 
 

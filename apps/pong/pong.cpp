@@ -10,6 +10,7 @@
 
 // #include <fmt/format.h>
 #include <iostream>
+#include <functional>
 #include <vector>
 #include <tuple>
 #include <random>
@@ -39,60 +40,41 @@ Pong::Pong()
       ),
       std::make_tuple(
         std::bind(&Pong::keyPressHandler, this, std::placeholders::_1)
-      )) {
+      )),
+    gravity(0.0f, 0.0f),
+    world(gravity),
+    pongContactListener({
+      physics::GenericContactListener::ContactHandler(&paddle, &ball, std::bind(&Pong::onBallHit, this)),
+      physics::GenericContactListener::ContactHandler(&boundingBox.bottomWall, &ball, std::bind(&Pong::onBallMissed, this))
+    }) {
   // std::cout << "Pong constructor" << std::endl;
 }
 
-b2Vec2 gravity(0.0f, 0.0f);
-b2World world(gravity);
 
-enum GameState {
-  IDLE,
-  START,
-  RUNNING,
-  OVER
-};
-
-static b2Body *ball;
-static b2Body *paddle;
-static int score;
-static GameState state;
-physics::BoundingBox boundingBox;
-
-void endGame(void) {
+void Pong::endGame(void) {
   ball->SetLinearVelocity(b2Vec2_zero);
   state = OVER;
   termdraw::graphics::printf("Press 'r' to restart!");
 }
 
-void checkBallHit(b2Contact *contact) {
-  if (!physics::isContactBetween(contact, paddle, ball)) {
-    return;
-  }
+void Pong::onBallHit(void) {
+  // if (!physics::isContactBetween(contact, paddle, ball)) {
+  //   return;
+  // }
   score++;
   termdraw::graphics::printf("Score!! %d\n", score);
 }
 
-void checkBallMissed(b2Contact* contact) {
-  if (!physics::isContactBetween(contact, boundingBox.bottomWall, ball)) {
-    return;
-  }
+void Pong::onBallMissed(void) {
+  // if (!physics::isContactBetween(contact, boundingBox.bottomWall, ball)) {
+  //   return;
+  // }
   termdraw::graphics::printf("Game over!! Score: %d\n", score);
   endGame();
 }
 
-class PongContactListener : public b2ContactListener {
-  void BeginContact(b2Contact* contact) {}
 
-  void EndContact(b2Contact* contact) {
-    checkBallHit(contact);
-    checkBallMissed(contact);
-  }
-};
-
-PongContactListener pongContactListener;
-
-void reset() {
+void Pong::reset() {
   while (world.GetBodyCount() > 0) {
     world.DestroyBody(world.GetBodyList());
   }
@@ -150,7 +132,7 @@ void Pong::setup(int argc, char *argv[]) {
   reset();
 }
 
-void startGame(void) {
+void Pong::startGame(void) {
   ball->SetLinearVelocity(physics::randomVelocity(BALL_SPEED));
   state = RUNNING;
 }

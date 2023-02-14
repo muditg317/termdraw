@@ -1,5 +1,7 @@
 #pragma once
 
+#include <initializer_list>
+#include <functional>
 #include <random>
 
 #include <box2d/box2d.h>
@@ -46,5 +48,23 @@ bool isContactBetween(b2Contact *contact, b2Body *body1, b2Body *body2);
 void drawCircleBody(b2Body *circleBody);
 
 void drawRectBody(b2Body *rectBody);
+
+class GenericContactListener : public b2ContactListener {
+ public:
+  struct ContactHandler {
+    ContactHandler(b2Body **body1, b2Body **body2, std::function<void(void)> handler)
+      : body1(body1), body2(body2), handler(handler) {}
+    b2Body **body1;
+    b2Body **body2;
+    std::function<void(void)> handler;
+  };
+  // variadic param for contact handlers
+  GenericContactListener(std::initializer_list<ContactHandler> contactHandlers)
+    : contactHandlers(contactHandlers) {}
+  void BeginContact(b2Contact* contact);
+  void EndContact(b2Contact* contact);
+ private:
+  std::vector<ContactHandler> contactHandlers;
+};
 
 } // namespace physics

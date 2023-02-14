@@ -95,4 +95,14 @@ void drawRectBody(b2Body *rectBody) {
   termdraw::shapes::rect(corner.x*PIXELS_PER_METER, corner.y*PIXELS_PER_METER, dims.x*PIXELS_PER_METER, dims.y*PIXELS_PER_METER);
 }
 
+void GenericContactListener::BeginContact(b2Contact* contact) {}
+
+void GenericContactListener::EndContact(b2Contact* contact) {
+  for (auto contactHandler : contactHandlers) {
+    if (isContactBetween(contact, *contactHandler.body1, *contactHandler.body2)) {
+      contactHandler.handler();
+    }
+  }
+}
+
 } // namespace physics

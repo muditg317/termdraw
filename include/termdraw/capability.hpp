@@ -24,7 +24,7 @@ struct PM_traits<U T::*> {
  * @brief The CapabilityBase class
  * This class is used to represent/add a capability of an application.
  */
-class CapabilityBase : public std::enable_shared_from_this<CapabilityBase> {
+class CapabilityBase {
  public:
   CapabilityBase();
 
