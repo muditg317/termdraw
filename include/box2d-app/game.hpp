@@ -11,8 +11,21 @@
 
 #include <box2d/box2d.h>
 
-namespace physics {
+#define DEFINE_GAME_FIELDS(game) \
+ public: \
+  static constexpr const char *NAME = #game; \
+  std::string name() const override { return NAME; }; \
+  game(); \
+ private: \
+  void setup(int argc, char *argv[]) override; \
+  void update(void) override; \
+  void keyPressHandler(termdraw::keyboard::KeyPressEvent) override; \
+ private: \
+  void reset(void) override; \
+  void startGame(void) override; \
+  void endGame(void) override;
 
+namespace physics {
 
 class Game : public termdraw::DependentCapability<termdraw::graphics::Graphics,termdraw::keyboard::Keyboard> {
  public:
