@@ -158,13 +158,6 @@ inline void resetCursor(void) {
   // getCursorPos(&lastCursorX,&lastCursorY);
 }
 
-static std::chrono::time_point<std::chrono::system_clock> start;
-
-static std::chrono::time_point<std::chrono::system_clock> t;
-static std::chrono::microseconds microSecDelay;
-
-static uint32_t framesComputed = 0;
-
 void Graphics::preloop(int argc, char *argv[]) {
   // graphics::printf("run graphics preloop\n");
   // signal(SIGINT, finish);
@@ -184,7 +177,8 @@ void Graphics::preloop(int argc, char *argv[]) {
   int64_t microsDelay = std::floor(1000000.0/FRAME_RATE);
   microSecDelay = std::chrono::microseconds(microsDelay);
   
-  start = t = std::chrono::system_clock::now();
+  t = std::chrono::system_clock::now();
+  timeMsComputing = 0;
 
   this->render();
   resetCursor();
@@ -192,6 +186,7 @@ void Graphics::preloop(int argc, char *argv[]) {
 
 void Graphics::loop(void) {
   // graphics::printf("run graphics loop\n");
+  std::chrono::time_point<std::chrono::system_clock> before = std::chrono::system_clock::now();
 
   // std::printf("call update!\n");
   update();
@@ -201,6 +196,9 @@ void Graphics::loop(void) {
   resetCursor();
 
   framesComputed++;
+
+  std::chrono::time_point<std::chrono::system_clock> after = std::chrono::system_clock::now();
+  timeMsComputing += (std::chrono::duration_cast<std::chrono::milliseconds>(after.time_since_epoch()) - std::chrono::duration_cast<std::chrono::milliseconds>(before.time_since_epoch())).count();
 
   t += microSecDelay;
   std::this_thread::sleep_until(t);
@@ -214,8 +212,6 @@ void Graphics::finish(int signum) {
 
   render();
 
-  std::chrono::time_point<std::chrono::system_clock> sim_end = std::chrono::system_clock::now();
-  auto timeMsComputing = (std::chrono::duration_cast<std::chrono::milliseconds>(sim_end.time_since_epoch()) - std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch())).count();
   long int timeMsComputed = (int) (framesComputed * DELTA_T_MS);
   // auto timeMsComputing = std::chrono::duration_cast<std::chrono::milliseconds>(timeComputing.time_since_epoch());
 

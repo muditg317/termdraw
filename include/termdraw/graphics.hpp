@@ -131,6 +131,13 @@ class Graphics : public Capability<> {
 
   bool dimsSet;
 
+
+  std::chrono::time_point<std::chrono::system_clock> t;
+  std::chrono::microseconds microSecDelay;
+
+  uint32_t framesComputed = 0;
+  int64_t timeMsComputing;
+
   template<class... Capabilities>
   friend class Application;
 };
