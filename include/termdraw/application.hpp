@@ -69,10 +69,9 @@ class Application : public ApplicationBase {
  static_assert(std::conjunction_v<std::is_base_of<CapabilityBase, Capabilities>...>,
                "All Application template parameters must be derived from CapabilityBase");
  public:
- // take in tuple for args to each capability
+  // take in tuple for args to each capability
   template<typename... Tuples>
   Application(Tuples&&... tuples);
-
 };
 
 extern std::shared_ptr<ApplicationBase> app;
