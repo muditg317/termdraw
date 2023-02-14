@@ -1,28 +1,15 @@
 #include <pong.hpp>
 
-#include <termdraw/application.hpp>
-#include <termdraw/capability.hpp>
 #include <termdraw/graphics.hpp>
 #include <termdraw/keyboard.hpp>
 #include <termdraw/shapes.hpp>
 
 #include <box2d-app/tools.hpp>
 
-// #include <fmt/format.h>
-#include <iostream>
 #include <functional>
-#include <vector>
-#include <tuple>
-#include <random>
 #include <cmath>
-#include <chrono>
 
-#include <Eigen/Eigen>
 #include <box2d/box2d.h>
-
-// #define PIXELS_PER_METER 15.0f
-// #define WORLD_WIDTH (WIDTH/PIXELS_PER_METER)
-// #define WORLD_HEIGHT (HEIGHT/PIXELS_PER_METER)
 
 #define BALL_SIZE (6.0f / PIXELS_PER_METER)
 #define BALL_SPEED (BALL_SIZE * 15.0f)
