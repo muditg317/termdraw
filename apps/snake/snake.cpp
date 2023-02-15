@@ -11,21 +11,23 @@
 
 #include <box2d/box2d.h>
 
-#define BALL_SIZE (6.0f / PIXELS_PER_METER)
-#define BALL_SPEED (BALL_SIZE * 15.0f)
+#define SNAKE_MAX_SIZE (6.0f / PIXELS_PER_METER)
+#define SNAKE_MIN_SIZE (SNAKE_MAX_SIZE * 0.5f)
+#define SNAKE_SPEED (SNAKE_MAX_SIZE * 5.0f)
 
-#define PADDLE_HEIGHT (3.0f / PIXELS_PER_METER)
-#define PADDLE_WIDTH (20.0f / PIXELS_PER_METER)
-#define PADDLE_Y (WORLD_HEIGHT - PADDLE_HEIGHT*3.0f)
-#define PADDLE_SPEED (PADDLE_WIDTH * 0.5f)
+#define APPLE_SIZE (SNAKE_MAX_SIZE * 0.5f)
 
 Snake::Snake()
   : Game(
       {0.0f, 0.0f},
       {
-        physics::GenericContactListener::ContactHandler(&paddle, &ball, std::bind(&Snake::onBallHit, this)),
-        physics::GenericContactListener::ContactHandler(&boundingBox.bottomWall, &ball, std::bind(&Snake::onBallMissed, this))
-      }
+        physics::ContactListener::ContactHandler(&head, &apple, std::bind(&Snake::onAppleHit, this)),
+        physics::ContactListener::ContactHandler(&boundingBox.bottomWall, &head, std::bind(&Snake::onEdgeHit, this)),
+        physics::ContactListener::ContactHandler(&boundingBox.topWall, &head, std::bind(&Snake::onEdgeHit, this)),
+        physics::ContactListener::ContactHandler(&boundingBox.leftWall, &head, std::bind(&Snake::onEdgeHit, this)),
+        physics::ContactListener::ContactHandler(&boundingBox.rightWall, &head, std::bind(&Snake::onEdgeHit, this))
+      },
+      std::bind(&Snake::checkSelfHit, this, std::placeholders::_1)
     ) {
   // std::cout << "Snake constructor" << std::endl;
 }
@@ -45,32 +47,32 @@ void Snake::reset() {
 
   physics::makeBoundingBox(&boundingBox, world, WORLD_WIDTH, WORLD_HEIGHT);
 
-  ball = physics::addDynamicCircle(world,
+  head = physics::addDynamicCircle(world,
     WORLD_WIDTH/2,
-    PADDLE_Y-PADDLE_HEIGHT/2-BALL_SIZE,
+    WORLD_HEIGHT/2,
     0,0,
-    BALL_SIZE);
-  paddle = physics::addStaticRect(world,WORLD_WIDTH/2,PADDLE_Y, PADDLE_WIDTH/2, PADDLE_HEIGHT/2);
-  
+    SNAKE_MAX_SIZE);
+  apple = physics::addStaticRect(world,APPLE_SIZE*1.5,APPLE_SIZE*1.5,APPLE_SIZE,APPLE_SIZE);
+  snake_tail.clear();
 
   state = physics::Game::GameState::IDLE;
   score = -1;
 }
 
 void Snake::startGame(void) {
-  ball->SetLinearVelocity(physics::randomVelocity(BALL_SPEED));
+  head->SetLinearVelocity(physics::randomVelocity(SNAKE_SPEED));
   state = physics::Game::GameState::RUNNING;
 }
 
 void Snake::endGame(void) {
-  ball->SetLinearVelocity(b2Vec2_zero);
+  head->SetLinearVelocity(b2Vec2_zero);
   state = physics::Game::GameState::OVER;
   termdraw::graphics::printf("Press 'r' to restart!");
 }
 
 void Snake::keyPressHandler(termdraw::keyboard::KeyPressEvent event) {
   char c = event.c;
-  if (c=='q') {
+  if (c == 'q') {
     termdraw::graphics::printf("quit!\n");
     APP->quit();
   }
@@ -86,30 +88,34 @@ void Snake::keyPressHandler(termdraw::keyboard::KeyPressEvent event) {
     }
   } else if (state == physics::Game::GameState::RUNNING) {
     if (event.specialKey == termdraw::keyboard::LEFT) {
-      float newX = std::max(paddle->GetPosition().x - PADDLE_SPEED, PADDLE_WIDTH/2);
-      paddle->SetTransform(*new b2Vec2(newX, PADDLE_Y), paddle->GetAngle());
+      // float newX = std::max(paddle->GetPosition().x - PADDLE_SPEED, PADDLE_WIDTH/2);
+      // paddle->SetTransform(*new b2Vec2(newX, PADDLE_Y), paddle->GetAngle());
     }
     if (event.specialKey == termdraw::keyboard::RIGHT) {
-      float newX = std::min(paddle->GetPosition().x + PADDLE_SPEED, WORLD_WIDTH - PADDLE_WIDTH/2);
-      paddle->SetTransform(*new b2Vec2(newX, PADDLE_Y), paddle->GetAngle());
+      // float newX = std::min(paddle->GetPosition().x + PADDLE_SPEED, WORLD_WIDTH - PADDLE_WIDTH/2);
+      // paddle->SetTransform(*new b2Vec2(newX, PADDLE_Y), paddle->GetAngle());
     }
   }
 }
 
-void Snake::onBallHit(void) {
-  // if (!physics::isContactBetween(contact, paddle, ball)) {
-  //   return;
-  // }
+void Snake::onAppleHit(void) {
   score++;
   termdraw::graphics::printf("Score!! %d\n", score);
 }
 
-void Snake::onBallMissed(void) {
-  // if (!physics::isContactBetween(contact, boundingBox.bottomWall, ball)) {
-  //   return;
-  // }
+void Snake::onEdgeHit(void) {
   termdraw::graphics::printf("Game over!! Score: %d\n", score);
   endGame();
+}
+
+void Snake::checkSelfHit(b2Contact *contact) {
+  b2Body *bodyA = contact->GetFixtureA()->GetBody();
+  b2Body *bodyB = contact->GetFixtureB()->GetBody();
+
+  if (bodyA == head || bodyB == head) {
+    termdraw::graphics::printf("Game over!! Score: %d", score);
+    endGame();
+  }
 }
 
 void Snake::update() {
@@ -121,7 +127,8 @@ void Snake::update() {
     world.Step(DELTA_T_SEC, 8, 1);
   }
 
-  physics::drawCircleBody(ball);
-  physics::drawRectBody(paddle);
+  physics::drawCircleBody(head);
+  physics::drawRectBody(apple);
+  // termdraw::graphics::printf("Head @ [%4.1f,%4.1f]\tApple @ [%4.1f,%4.1f]", head->GetPosition().x, head->GetPosition().y, apple->GetPosition().x, apple->GetPosition().y);
 }
 

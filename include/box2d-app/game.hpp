@@ -36,7 +36,8 @@ class Game : public termdraw::DependentCapability<termdraw::graphics::Graphics,t
     OVER
   };
  protected:
-  Game(std::array<float, 2> gravity_input, std::initializer_list<physics::GenericContactListener::ContactHandler> contactHandlers);
+  Game(std::array<float, 2> gravity_input, std::initializer_list<ContactListener::ContactHandler> contactHandlers, ContactListener::fallbackHandler_t fallbackHandler);
+  Game(std::array<float, 2> gravity_input, std::initializer_list<ContactListener::ContactHandler> contactHandlers);
 
  protected:
   /**
@@ -52,7 +53,7 @@ class Game : public termdraw::DependentCapability<termdraw::graphics::Graphics,t
   virtual void keyPressHandler(termdraw::keyboard::KeyPressEvent) = 0;
 
  private:
-  physics::GenericContactListener contactListener;
+  physics::ContactListener contactListener;
 
  protected:
   b2Vec2 gravity;

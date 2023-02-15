@@ -23,8 +23,8 @@ Pong::Pong()
   : Game(
       {0.0f, 0.0f},
       {
-        physics::GenericContactListener::ContactHandler(&paddle, &ball, std::bind(&Pong::onBallHit, this)),
-        physics::GenericContactListener::ContactHandler(&boundingBox.bottomWall, &ball, std::bind(&Pong::onBallMissed, this))
+        physics::ContactListener::ContactHandler(&paddle, &ball, std::bind(&Pong::onBallHit, this)),
+        physics::ContactListener::ContactHandler(&boundingBox.bottomWall, &ball, std::bind(&Pong::onBallMissed, this))
       }
     ) {
   // std::cout << "Pong constructor" << std::endl;

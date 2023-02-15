@@ -95,14 +95,25 @@ void drawRectBody(b2Body *rectBody) {
   termdraw::shapes::rect(corner.x*PIXELS_PER_METER, corner.y*PIXELS_PER_METER, dims.x*PIXELS_PER_METER, dims.y*PIXELS_PER_METER);
 }
 
-void GenericContactListener::BeginContact(b2Contact* contact) {}
 
-void GenericContactListener::EndContact(b2Contact* contact) {
+ContactListener::ContactListener(std::initializer_list<ContactHandler> contactHandlers, std::function<void(b2Contact *)> fallbackHandler)
+    : contactHandlers(contactHandlers),
+      fallbackHandler(fallbackHandler) {
+}
+ContactListener::ContactListener(std::initializer_list<ContactHandler> contactHandlers)
+    : ContactListener(contactHandlers, ContactListener::fallbackHandlerDefault) {
+}
+
+void ContactListener::BeginContact(b2Contact* contact) {}
+
+void ContactListener::EndContact(b2Contact* contact) {
   for (auto contactHandler : contactHandlers) {
     if (isContactBetween(contact, *contactHandler.body1, *contactHandler.body2)) {
       contactHandler.handler();
+      return;
     }
   }
+  fallbackHandler(contact);
 }
 
 } // namespace physics

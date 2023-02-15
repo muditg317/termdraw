@@ -11,12 +11,14 @@
 class Snake : public physics::Game {
 DEFINE_GAME_FIELDS(Snake)
  private:
-  b2Body *ball;
-  b2Body *paddle;
+  std::vector<b2Body *> snake_tail;
+  b2Body *head;
+  b2Body *apple;
   int score;
   
-  void onBallHit(void);
-  void onBallMissed(void);
+  void onAppleHit(void);
+  void onEdgeHit(void);
+  void checkSelfHit(b2Contact *);
 };
 
 

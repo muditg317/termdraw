@@ -49,7 +49,7 @@ void drawCircleBody(b2Body *circleBody);
 
 void drawRectBody(b2Body *rectBody);
 
-class GenericContactListener : public b2ContactListener {
+class ContactListener : public b2ContactListener {
  public:
   struct ContactHandler {
     ContactHandler(b2Body **body1, b2Body **body2, std::function<void(void)> handler)
@@ -58,13 +58,16 @@ class GenericContactListener : public b2ContactListener {
     b2Body **body2;
     std::function<void(void)> handler;
   };
+  using fallbackHandler_t = std::function<void(b2Contact *)>;
+  static inline const fallbackHandler_t fallbackHandlerDefault = [](b2Contact *contact) {};
   // variadic param for contact handlers
-  GenericContactListener(std::initializer_list<ContactHandler> contactHandlers)
-    : contactHandlers(contactHandlers) {}
+  ContactListener(std::initializer_list<ContactHandler> contactHandlers, fallbackHandler_t fallbackHandler);
+  ContactListener(std::initializer_list<ContactHandler> contactHandlers);
   void BeginContact(b2Contact* contact);
   void EndContact(b2Contact* contact);
  private:
   std::vector<ContactHandler> contactHandlers;
+  fallbackHandler_t fallbackHandler;
 };
 
 } // namespace physics
