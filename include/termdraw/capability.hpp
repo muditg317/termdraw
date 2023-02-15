@@ -4,8 +4,6 @@
 #include <string>
 #include <vector>
 
-#include <Eigen/Eigen>
-
 #include <termdraw/base.hpp>
 
 namespace termdraw {

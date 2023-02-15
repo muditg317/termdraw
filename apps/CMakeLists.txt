@@ -1,12 +1,26 @@
-set (apps
-  pong
-)
+# set (apps
+#   pong
+# )
+MACRO(SUBDIRLIST result curdir)
+  FILE(GLOB children LIST_DIRECTORIES true RELATIVE ${curdir} ${curdir}/*)
+  SET(dirlist "")
+  FOREACH(child ${children})
+    IF(IS_DIRECTORY ${curdir}/${child})
+      LIST(APPEND dirlist ${child})
+    ENDIF()
+  ENDFOREACH()
+  SET(${result} ${dirlist})
+ENDMACRO()
+
+SUBDIRLIST(apps ${CMAKE_CURRENT_SOURCE_DIR})
+message(STATUS "apps: ${apps}")
 list(GET apps -1 MAIN_APP)
 
 
 set (DEFAULT_APP_LIBRARIES termdraw_library)
 
 set (pong_LIBRARIES termdraw_library fmt::fmt LibBox2dApp)
+set (snake_LIBRARIES termdraw_library fmt::fmt LibBox2dApp)
 
 set (APPS_OUTPUT_DIR ${C-Ballz_SOURCE_DIR})
 if (NOT EXISTS ${APPS_OUTPUT_DIR})
