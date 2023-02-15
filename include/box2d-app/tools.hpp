@@ -32,6 +32,15 @@ b2Body *addStaticRect(b2World &world, float x, float y, float hx, float hy);
 
 void makeBoundingBox(BoundingBox *out_boundingBox, b2World &world, float width, float height);
 
+void disableBounce(b2Body *body);
+
+inline b2Vec2 *randomPosition(float minX, float minY, float maxX, float maxY) {
+  return new b2Vec2(
+    ((float) random() / (float) RAND_MAX) * (maxX - minX) + minX,
+    ((float) random() / (float) RAND_MAX) * (maxY - minY) + minY
+  );
+}
+
 /**
  * @brief creates a 2d vector with random angle and input speed
  * 
@@ -41,6 +50,22 @@ void makeBoundingBox(BoundingBox *out_boundingBox, b2World &world, float width, 
 inline b2Vec2 randomVelocity(int speed = 1) {
   float angle = -((float) random() / (float) RAND_MAX) * M_PI;
   return speed * *new b2Vec2(std::cos(angle),std::sin(angle));
+}
+inline b2Vec2 randomCardinalVelocity(int speed = 1) {
+  switch (random() % 4) {
+    case 0:
+      return *new b2Vec2(speed, 0);
+    case 1:
+      return *new b2Vec2(-speed, 0);
+    case 2:
+      return *new b2Vec2(0, speed);
+    case 3:
+      return *new b2Vec2(0, -speed);
+  }
+}
+
+inline b2Vec2 rotateVector(b2Vec2 vector, float angle) {
+  return b2Mul(b2Rot(angle), vector);
 }
 
 bool isContactBetween(b2Contact *contact, b2Body *body1, b2Body *body2);

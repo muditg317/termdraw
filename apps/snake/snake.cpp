@@ -53,14 +53,19 @@ void Snake::reset() {
     0,0,
     SNAKE_MAX_SIZE);
   apple = physics::addStaticRect(world,APPLE_SIZE*1.5,APPLE_SIZE*1.5,APPLE_SIZE,APPLE_SIZE);
+  physics::disableBounce(apple);
+  // physics::disableBounce(head);
   snake_tail.clear();
 
+  nextApplePosition = nullptr;
+
   state = physics::Game::GameState::IDLE;
-  score = -1;
+  score = 0;
 }
 
 void Snake::startGame(void) {
-  head->SetLinearVelocity(physics::randomVelocity(SNAKE_SPEED));
+  head->SetLinearVelocity(physics::randomCardinalVelocity(SNAKE_SPEED));
+  randomizeApple();
   state = physics::Game::GameState::RUNNING;
 }
 
@@ -87,20 +92,39 @@ void Snake::keyPressHandler(termdraw::keyboard::KeyPressEvent event) {
       state = physics::Game::GameState::START;
     }
   } else if (state == physics::Game::GameState::RUNNING) {
-    if (event.specialKey == termdraw::keyboard::LEFT) {
-      // float newX = std::max(paddle->GetPosition().x - PADDLE_SPEED, PADDLE_WIDTH/2);
-      // paddle->SetTransform(*new b2Vec2(newX, PADDLE_Y), paddle->GetAngle());
-    }
-    if (event.specialKey == termdraw::keyboard::RIGHT) {
-      // float newX = std::min(paddle->GetPosition().x + PADDLE_SPEED, WORLD_WIDTH - PADDLE_WIDTH/2);
-      // paddle->SetTransform(*new b2Vec2(newX, PADDLE_Y), paddle->GetAngle());
+    if (head->GetLinearVelocity().x == 0) {
+      if (event.specialKey == termdraw::keyboard::LEFT) {
+        // head->SetLinearVelocity(physics::rotateVector(head->GetLinearVelocity(), -M_PI/12));
+        head->SetLinearVelocity(*new b2Vec2(-SNAKE_SPEED, 0));
+      }
+      if (event.specialKey == termdraw::keyboard::RIGHT) {
+        // head->SetLinearVelocity(physics::rotateVector(head->GetLinearVelocity(), M_PI/12));
+        head->SetLinearVelocity(*new b2Vec2(SNAKE_SPEED, 0));
+      }
+    } else if (head->GetLinearVelocity().y == 0) {
+      if (event.specialKey == termdraw::keyboard::UP) {
+        head->SetLinearVelocity(*new b2Vec2(0, -SNAKE_SPEED));
+      }
+      if (event.specialKey == termdraw::keyboard::DOWN) {
+        head->SetLinearVelocity(*new b2Vec2(0, SNAKE_SPEED));
+      }
     }
   }
+}
+
+void Snake::randomizeApple(void) {
+  nextApplePosition = physics::randomPosition(
+    SNAKE_MAX_SIZE * 2,
+    SNAKE_MAX_SIZE * 2,
+    WORLD_WIDTH - SNAKE_MAX_SIZE * 2,
+    WORLD_HEIGHT - SNAKE_MAX_SIZE * 2
+  );
 }
 
 void Snake::onAppleHit(void) {
   score++;
   termdraw::graphics::printf("Score!! %d\n", score);
+  randomizeApple();
 }
 
 void Snake::onEdgeHit(void) {
@@ -125,6 +149,12 @@ void Snake::update() {
     startGame();
   } else if (state == physics::Game::GameState::RUNNING) {
     world.Step(DELTA_T_SEC, 8, 1);
+  }
+
+  if (nextApplePosition != nullptr) {
+    apple->SetTransform(*nextApplePosition, apple->GetAngle());
+    // termdraw::graphics::printf("Apple at [%4.1f,%4.1f]", apple->GetPosition().x, apple->GetPosition().y);
+    nextApplePosition = nullptr;
   }
 
   physics::drawCircleBody(head);

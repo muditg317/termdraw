@@ -16,6 +16,9 @@ DEFINE_GAME_FIELDS(Snake)
   b2Body *apple;
   int score;
   
+  b2Vec2 *nextApplePosition;
+  void randomizeApple(void);
+
   void onAppleHit(void);
   void onEdgeHit(void);
   void checkSelfHit(b2Contact *);

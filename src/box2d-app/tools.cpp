@@ -60,6 +60,11 @@ void makeBoundingBox(BoundingBox *out_boundingBox, b2World &world, float width, 
   out_boundingBox->leftWall = addStaticRect(world, -1,height/2,1,height/2);
 }
 
+void disableBounce(b2Body *body) {
+  b2Fixture *fixture = body->GetFixtureList();
+  fixture->SetSensor(true);
+}
+
 bool isContactBetween(b2Contact *contact, b2Body *body1, b2Body *body2) {
   b2Body *contactBodyA = contact->GetFixtureA()->GetBody();
   b2Body *contactBodyB = contact->GetFixtureB()->GetBody();
@@ -104,7 +109,8 @@ ContactListener::ContactListener(std::initializer_list<ContactHandler> contactHa
     : ContactListener(contactHandlers, ContactListener::fallbackHandlerDefault) {
 }
 
-void ContactListener::BeginContact(b2Contact* contact) {}
+void ContactListener::BeginContact(b2Contact* contact) {
+}
 
 void ContactListener::EndContact(b2Contact* contact) {
   for (auto contactHandler : contactHandlers) {
