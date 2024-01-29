@@ -21,6 +21,7 @@ toolchain=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
 
 proj_dir=$(pwd)
 build_dir=$proj_dir/build
+mkdir -p $build_dir
 
 # rm -rf build
 find $build_dir -mindepth 1 -maxdepth 1 ! -regex "^$build_dir/vcpkg\(.*\)?" -exec rm -rf '{}' \;
